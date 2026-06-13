@@ -101,6 +101,7 @@ You need to inspect the following video metadata and narration script to ensure 
 VIDEO DETAILS:
 - Title: ${videoData.title}
 - Description: ${videoData.description}
+- Video Type: ${videoData.type}
 - Script Snippet: ${videoData.fullScript ? videoData.fullScript.substring(0, 1000) : 'No script provided'}
 
 ADVERTISER-FRIENDLY POLICY GUIDELINES:
@@ -109,7 +110,7 @@ ADVERTISER-FRIENDLY POLICY GUIDELINES:
 - No dangerous or harmful acts.
 - No controversial topics, misinformation, or sensitive events.
 - No excessive profanity or inappropriate language.
-- No misleading titles or clickbait that violates spam policies.
+- No misleading titles or clickbait that violates spam policies. Note: For YouTube Shorts (Video Type: short), punchy title hooks such as "in 60 Secs!", "in 60 seconds", "in 1 minute", "in 1 min", or "fast hacks" are standard industry practice and should NOT be flagged as misleading clickbait or misleading metadata, provided the video is indeed a short-form video and the script matches the topic.
 
 Evaluate the content and respond in JSON format matching this schema:
 {
