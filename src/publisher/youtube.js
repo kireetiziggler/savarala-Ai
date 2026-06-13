@@ -32,6 +32,23 @@ async function attemptUpload(youtube, videoMetadata, videoPath, thumbnailPath) {
 
   // Construct description combining paragraphs, hashtags, and standard links
   const tagsList = videoMetadata.tags || [];
+  
+  // YouTube has a strict 500-character combined limit for all tags.
+  // We filter and truncate tags to stay under 450 characters (with a safe margin).
+  let totalLength = 0;
+  const safeTags = [];
+  for (const tag of tagsList) {
+    const cleanTag = tag.trim();
+    if (!cleanTag) continue;
+    const tagLength = cleanTag.length + (safeTags.length > 0 ? 1 : 0);
+    if (totalLength + tagLength <= 450) {
+      safeTags.push(cleanTag);
+      totalLength += tagLength;
+    } else {
+      break;
+    }
+  }
+
   const hashtagsList = videoMetadata.hashtags || [];
   const hashtagsString = hashtagsList.map(h => h.startsWith('#') ? h : `#${h}`).join(' ');
   const fullDescription = `${videoMetadata.description}\n\n${hashtagsString}`;
@@ -40,7 +57,7 @@ async function attemptUpload(youtube, videoMetadata, videoPath, thumbnailPath) {
     snippet: {
       title: videoMetadata.title,
       description: fullDescription,
-      tags: tagsList.slice(0, 30),
+      tags: safeTags,
       categoryId: categoryId
     },
     status: {
