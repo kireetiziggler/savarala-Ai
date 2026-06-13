@@ -24,7 +24,7 @@ function getGeminiModel() {
     throw new Error('GEMINI_API_KEY environment variable is missing.');
   }
   const genAI = new GoogleGenerativeAI(apiKey);
-  const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   return genAI.getGenerativeModel({
     model: modelName,
     generationConfig: { responseMimeType: 'application/json' }
