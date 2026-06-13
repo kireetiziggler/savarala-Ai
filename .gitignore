@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Secrets and Configuration
+.env
+
+# Temporary and Output files
+scratch/
+output/
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db

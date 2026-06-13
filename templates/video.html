@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;800&family=Outfit:wght@500;700;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #0b0f19;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Aspect Ratio Containers */
+    .viewport-short {
+      width: 1080px;
+      height: 1920px;
+      transform: scale(0.5); /* Scaled down for host preview if needed, but we capture at native size */
+      transform-origin: center center;
+    }
+
+    .viewport-long {
+      width: 1920px;
+      height: 1080px;
+    }
+
+    /* Main View Containers */
+    .view-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .view-panel.active {
+      display: flex;
+    }
+
+    /* 1. Slide Layout */
+    .slide-layout {
+      width: 85%;
+      height: 70%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
+      padding: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .slide-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 72px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 40px;
+      line-height: 1.2;
+    }
+
+    .slide-bullets {
+      list-style-type: none;
+    }
+
+    .slide-bullets li {
+      font-size: 44px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+    }
+
+    .slide-bullets li::before {
+      content: "✦";
+      color: #38bdf8;
+      margin-right: 20px;
+      font-size: 36px;
+    }
+
+    .highlight-text {
+      color: #ffeb3b;
+      text-shadow: 0 0 10px rgba(255, 235, 59, 0.3);
+      font-weight: 700;
+    }
+
+    /* 2. Code Editor Layout */
+    .code-layout {
+      width: 90%;
+      height: 75%;
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .editor-header {
+      background: #11111b;
+      height: 60px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #313244;
+      position: relative;
+    }
+
+    .editor-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .editor-button {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    .btn-red { background: #f38ba8; }
+    .btn-yellow { background: #f9e2af; }
+    .btn-green { background: #a6e3a1; }
+
+    .editor-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Fira Code', monospace;
+      color: #cdd6f4;
+      font-size: 22px;
+    }
+
+    .editor-body {
+      flex: 1;
+      padding: 40px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .line-numbers {
+      font-family: 'Fira Code', monospace;
+      color: #585b70;
+      font-size: 28px;
+      text-align: right;
+      padding-right: 30px;
+      user-select: none;
+      line-height: 1.6;
+    }
+
+    .code-content {
+      flex: 1;
+      font-family: 'Fira Code', monospace;
+      font-size: 28px;
+      color: #cdd6f4;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    /* Code Syntax Highlighting Presets */
+    .keyword { color: #cba6f7; font-weight: bold; }
+    .string { color: #a6e3a1; }
+    .function { color: #89b4fa; }
+    .comment { color: #6c7086; font-style: italic; }
+    .number { color: #fab387; }
+    .builtin { color: #89dceb; }
+
+    /* 3. Media Layout */
+    .media-layout {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .media-element {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform-origin: center center;
+    }
+
+    .media-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(11, 15, 25, 0.4), rgba(11, 15, 25, 0.85));
+      z-index: 2;
+    }
+
+    /* Subtitles Overlay (Overlaying on top of everything) */
+    .subtitle-panel {
+      position: absolute;
+      bottom: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85%;
+      text-align: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .subtitles {
+      font-family: 'Outfit', sans-serif;
+      font-size: 64px; /* Mobile friendly */
+      font-weight: 900;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1.3;
+      letter-spacing: 1.5px;
+      text-shadow: 
+        -3px -3px 0 #000,  
+         3px -3px 0 #000,
+        -3px  3px 0 #000,
+         3px  3px 0 #000,
+        -3px  0px 0 #000,
+         3px  0px 0 #000,
+         0px -3px 0 #000,
+         0px  3px 0 #000,
+         0px  5px 15px rgba(0,0,0,0.8);
+      word-wrap: break-word;
+    }
+
+    .subtitles span {
+      display: inline-block;
+      margin: 0 8px;
+      transition: color 0.1s ease;
+    }
+
+    .subtitles span.active {
+      color: #ffeb3b;
+      transform: scale(1.08);
+      text-shadow: 
+        -3px -3px 0 #000,  
+         3px -3px 0 #000,
+        -3px  3px 0 #000,
+         3px  3px 0 #000,
+         0px 0px 15px rgba(255, 235, 59, 0.6);
+    }
+
+    /* Video Frame Sizing (Controlled by wrapper class) */
+    #app.short {
+      width: 1080px;
+      height: 1920px;
+    }
+
+    #app.long {
+      width: 1920px;
+      height: 1080px;
+    }
+
+    #app.short .slide-title { font-size: 60px; }
+    #app.short .slide-bullets li { font-size: 34px; }
+    #app.short .code-content { font-size: 22px; }
+    #app.short .line-numbers { font-size: 22px; }
+    #app.short .subtitles { font-size: 52px; }
+    #app.short .subtitle-panel { bottom: 35%; } /* Higher up for vertical Shorts to avoid UI overlap */
+  </style>
+</head>
+<body>
+  <div id="app" class="short">
+    <!-- 1. Slide Panel -->
+    <div id="slide-panel" class="view-panel">
+      <div class="slide-layout">
+        <h1 id="slide-title" class="slide-title">Mastering Playwright</h1>
+        <ul id="slide-bullets" class="slide-bullets">
+          <li>Fast and reliable end-to-end testing</li>
+          <li>Auto-waiting mechanisms</li>
+          <li>Trace viewer debugging</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 2. Code Panel -->
+    <div id="code-panel" class="view-panel">
+      <div class="code-layout">
+        <div class="editor-header">
+          <div class="editor-buttons">
+            <div class="editor-button btn-red"></div>
+            <div class="editor-button btn-yellow"></div>
+            <div class="editor-button btn-green"></div>
+          </div>
+          <div id="editor-title" class="editor-title">test.spec.js</div>
+        </div>
+        <div class="editor-body">
+          <div id="line-numbers" class="line-numbers">1<br>2<br>3<br>4<br>5</div>
+          <div id="code-content" class="code-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Media Panel -->
+    <div id="media-panel" class="view-panel">
+      <div class="media-layout">
+        <div id="media-container" style="width:100%; height:100%;">
+          <img id="media-img" class="media-element" src="" style="display:none;" />
+          <video id="media-video" class="media-element" src="" muted loop style="display:none;"></video>
+        </div>
+        <div class="media-overlay"></div>
+      </div>
+    </div>
+
+    <!-- Global Subtitles Layer -->
+    <div class="subtitle-panel">
+      <div id="subtitles-content" class="subtitles"></div>
+    </div>
+  </div>
+
+  <script>
+    // Self-contained syntax highlighter
+    function highlightCode(code, lang) {
+      if (!code) return '';
+      
+      // Escape HTML
+      let html = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Highlighting patterns
+      const keywords = /\b(const|let|var|function|return|import|from|async|await|describe|test|expect|class|extends|new|if|else|for|while|try|catch|def|import|as|from|def|assert|with)\b/g;
+      const builtins = /\b(console|log|page|browser|playwright|selenium|driver|webdriver|locator|click|goto|fill|waitForSelector|screenshot|window|document|String|Number|Boolean|Array|Object)\b/g;
+      const strings = /(["'`])(.*?)\1/g;
+      const comments = /(\/\/.*|#.*)/g;
+      const numbers = /\b(\d+)\b/g;
+
+      html = html
+        .replace(comments, '<span class="comment">$1</span>')
+        .replace(strings, '<span class="string">$1$2$1</span>')
+        .replace(keywords, '<span class="keyword">$1</span>')
+        .replace(builtins, '<span class="builtin">$1</span>')
+        .replace(numbers, '<span class="number">$1</span>');
+
+      return html;
+    }
+
+    // Global update function driven by Puppeteer
+    window.updateState = function(stateJson) {
+      const state = JSON.parse(stateJson);
+      const app = document.getElementById('app');
+      
+      // Set aspect ratio class
+      app.className = state.videoType === 'short' ? 'short' : 'long';
+
+      // 1. Setup Active View
+      const panels = ['slide-panel', 'code-panel', 'media-panel'];
+      panels.forEach(p => document.getElementById(p).classList.remove('active'));
+
+      if (state.visualType === 'slide') {
+        document.getElementById('slide-panel').classList.add('active');
+        document.getElementById('slide-title').innerText = state.visualParams.title;
+        
+        const bulletsContainer = document.getElementById('slide-bullets');
+        bulletsContainer.innerHTML = '';
+        state.visualParams.bullets.forEach(b => {
+          const li = document.createElement('li');
+          
+          // Apply highlight if word is present
+          if (state.visualParams.highlight && b.toLowerCase().includes(state.visualParams.highlight.toLowerCase())) {
+            const regex = new RegExp(`(${state.visualParams.highlight})`, 'gi');
+            li.innerHTML = b.replace(regex, '<span class="highlight-text">$1</span>');
+          } else {
+            li.innerText = b;
+          }
+          bulletsContainer.appendChild(li);
+        });
+
+      } else if (state.visualType === 'code') {
+        document.getElementById('code-panel').classList.add('active');
+        document.getElementById('editor-title').innerText = `editor.${state.visualParams.language === 'python' ? 'py' : 'js'}`;
+        
+        // Render Line Numbers
+        const codeLines = state.visualParams.code.split('\n');
+        const numContainer = document.getElementById('line-numbers');
+        numContainer.innerHTML = codeLines.map((_, i) => i + 1).join('<br>');
+
+        // Typewriter/Progressive code disclosure based on elapsed scene time
+        const totalChars = state.visualParams.code.length;
+        const revealPercent = Math.min(1, state.sceneProgress || 1);
+        const charsToReveal = Math.floor(totalChars * revealPercent);
+        const codeToRender = state.visualParams.code.substring(0, charsToReveal);
+
+        const contentContainer = document.getElementById('code-content');
+        contentContainer.innerHTML = highlightCode(codeToRender, state.visualParams.language);
+
+      } else if (state.visualType === 'stock_media') {
+        document.getElementById('media-panel').classList.add('active');
+        const img = document.getElementById('media-img');
+        const video = document.getElementById('media-video');
+        
+        const mediaUrl = state.visualParams.mediaUrl;
+        const isVideo = mediaUrl && (mediaUrl.endsWith('.mp4') || mediaUrl.includes('video'));
+
+        if (isVideo) {
+          img.style.display = 'none';
+          video.style.display = 'block';
+          if (video.src !== mediaUrl) {
+            video.src = mediaUrl;
+            video.play().catch(e => console.log('Video autoplay blocked/failed', e));
+          }
+          
+          // Ken burns scale transition
+          const scale = 1 + 0.1 * (state.sceneProgress || 0);
+          video.style.transform = `scale(${scale})`;
+        } else if (mediaUrl) {
+          video.style.display = 'none';
+          img.style.display = 'block';
+          img.src = mediaUrl;
+          
+          const scale = 1 + 0.15 * (state.sceneProgress || 0);
+          img.style.transform = `scale(${scale})`;
+        }
+      }
+
+      // 2. Render Subtitles & Highlight Active Word
+      const subtitleContainer = document.getElementById('subtitles-content');
+      subtitleContainer.innerHTML = '';
+
+      if (state.words && state.words.length > 0) {
+        state.words.forEach((w, idx) => {
+          const span = document.createElement('span');
+          span.innerText = w;
+          if (idx === state.activeWordIndex) {
+            span.classList.add('active');
+          }
+          subtitleContainer.appendChild(span);
+        });
+      }
+    };
+  </script>
+</body>
+</html>
