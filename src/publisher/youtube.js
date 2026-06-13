@@ -34,15 +34,24 @@ async function attemptUpload(youtube, videoMetadata, videoPath, thumbnailPath) {
   const tagsList = videoMetadata.tags || [];
   
   // YouTube has a strict 500-character combined limit for all tags.
-  // We filter and truncate tags to stay under 450 characters (with a safe margin).
+  // Each tag cannot exceed 100 characters and must only contain alphanumeric characters, spaces, or hyphens/underscores.
+  // We filter, sanitize, and truncate tags to stay under 400 characters (with a safe margin).
   let totalLength = 0;
   const safeTags = [];
   for (const tag of tagsList) {
-    const cleanTag = tag.trim();
+    const cleanTag = String(tag)
+      .replace(/[^a-zA-Z0-9\s_-]/g, '') // strip special characters like #, <, >, commas, dots, slashes
+      .replace(/\s+/g, ' ')             // collapse multiple spaces
+      .trim();
+      
     if (!cleanTag) continue;
-    const tagLength = cleanTag.length + (safeTags.length > 0 ? 1 : 0);
-    if (totalLength + tagLength <= 450) {
-      safeTags.push(cleanTag);
+    
+    // Truncate individual tag if it exceeds 100 characters
+    const finalTag = cleanTag.substring(0, 100);
+    
+    const tagLength = finalTag.length + (safeTags.length > 0 ? 1 : 0);
+    if (totalLength + tagLength <= 400) {
+      safeTags.push(finalTag);
       totalLength += tagLength;
     } else {
       break;
