@@ -500,7 +500,7 @@
     }
 
     // Driver Update Function (Called frame-by-frame by Puppeteer)
-    window.updateState = function(stateJson) {
+    window.updateState = async function(stateJson) {
       const state = JSON.parse(stateJson);
       const app = document.getElementById('app');
       
@@ -634,12 +634,41 @@
           video.style.display = 'block';
           if (video.src !== mediaUrl) {
             video.src = mediaUrl;
-            video.play().catch(e => console.log('Video play failed', e));
+            video.pause();
+            await new Promise((resolve) => {
+              if (video.readyState >= 1) { // HAVE_METADATA or greater
+                resolve();
+              } else {
+                video.onloadedmetadata = () => resolve();
+                video.onerror = () => resolve();
+              }
+            });
+          }
+          if (video.duration) {
+            const videoTime = (state.sceneProgress * state.sceneDuration) % video.duration;
+            video.currentTime = videoTime;
+            await new Promise((resolve) => {
+              if (!video.seeking) {
+                resolve();
+              } else {
+                video.onseeked = () => resolve();
+              }
+            });
           }
         } else if (mediaUrl) {
           video.style.display = 'none';
           img.style.display = 'block';
-          img.src = mediaUrl;
+          if (img.src !== mediaUrl) {
+            img.src = mediaUrl;
+            await new Promise((resolve) => {
+              if (img.complete) {
+                resolve();
+              } else {
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+              }
+            });
+          }
         }
       }
 

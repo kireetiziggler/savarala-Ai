@@ -332,12 +332,14 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
           sceneProgress,
           overallProgress,
           words,
-          activeWordIndex
+          activeWordIndex,
+          timeSec,
+          sceneDuration: duration
         };
 
         // Inject state and capture screenshot
-        await page.evaluate((stateStr) => {
-          window.updateState(stateStr);
+        await page.evaluate(async (stateStr) => {
+          await window.updateState(stateStr);
         }, JSON.stringify(frameState));
 
         // Use JPEG format (quality 85) instead of PNG to speed up disk writes by 5x
