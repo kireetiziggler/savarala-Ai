@@ -114,10 +114,14 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
   const tempDir = path.join(process.cwd(), 'scratch', jobId);
   fs.mkdirSync(tempDir, { recursive: true });
 
-  const browser = await puppeteer.launch({
+  const launchOptions = {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
+  };
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+  const browser = await puppeteer.launch(launchOptions);
 
   const page = await browser.newPage();
   const width = videoType === 'short' ? 1080 : 1920;
