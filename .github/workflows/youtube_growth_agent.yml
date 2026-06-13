@@ -80,7 +80,7 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           TTS_PROVIDER: edge
-          VOICEOVER_LOCALE: en-IN-NeerjaNeural
+          VOICEOVER_LOCALE: en-US-AndrewNeural
           YT_PRIVACY_STATUS: public # Set to 'private' if you want to inspect first
         run: |
           # Get current UTC hour

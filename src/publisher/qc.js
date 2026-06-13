@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
+import { getAudioDuration } from '../generator/voiceover.js';
 
 dotenv.config();
 
@@ -9,9 +10,29 @@ function getGeminiModel() {
   if (!apiKey) return null;
   const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
     generationConfig: { responseMimeType: 'application/json' }
   });
+}
+
+// Helper to retry Gemini calls on 429 Rate Limits
+async function generateContentWithRetry(model, prompt, retries = 5, delay = 10000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await model.generateContent(prompt);
+    } catch (error) {
+      const is429 = error.status === 429 || 
+                    (error.message && error.message.includes('429')) || 
+                    (error.message && error.message.includes('Quota exceeded'));
+      if (is429 && i < retries - 1) {
+        const waitTime = delay * Math.pow(2, i);
+        console.warn(`[Rate Limit] Gemini returned 429. Retrying in ${(waitTime/1000).toFixed(0)}s... (Attempt ${i + 1}/${retries})`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      } else {
+        throw error;
+      }
+    }
+  }
 }
 
 export async function runQualityControl(videoData, videoPath, thumbnailPath) {
@@ -34,6 +55,27 @@ export async function runQualityControl(videoData, videoPath, thumbnailPath) {
     const thumbStats = fs.statSync(thumbnailPath);
     if (thumbStats.size < 1024 * 5) {
       errors.push(`Thumbnail file is too small (${(thumbStats.size / 1024).toFixed(2)} KB).`);
+    }
+  }
+
+  // 1.5 Video file duration checks
+  if (fs.existsSync(videoPath)) {
+    try {
+      const duration = await getAudioDuration(videoPath);
+      console.log(`QC Check: Video duration is ${duration.toFixed(2)}s`);
+      if (videoData.type === 'short') {
+        if (duration < 40) {
+          errors.push(`Video duration is too short (${duration.toFixed(2)}s). Target is 45-60s.`);
+        } else if (duration > 60) {
+          errors.push(`Video duration is too long (${duration.toFixed(2)}s). YouTube Shorts must be strictly under 60 seconds.`);
+        }
+      } else {
+        if (duration < 300) {
+          errors.push(`Video duration is too short (${duration.toFixed(2)}s) for long-form video. Target is 5-10 minutes.`);
+        }
+      }
+    } catch (durError) {
+      console.warn('Could not verify video duration during QC:', durError.message);
     }
   }
 
@@ -79,7 +121,7 @@ Evaluate the content and respond in JSON format matching this schema:
     `;
 
     try {
-      const result = await model.generateContent(prompt);
+      const result = await generateContentWithRetry(model, prompt);
       const text = result.response.text();
       const audit = JSON.parse(text);
 
@@ -124,7 +166,9 @@ function runLocalSafetyScan(videoData, errors) {
   const textToScan = `${videoData.title} ${videoData.description} ${videoData.fullScript || ''}`.toLowerCase();
   
   for (const word of restrictedKeywords) {
-    if (textToScan.includes(word)) {
+    const escapedWord = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+    if (regex.test(textToScan)) {
       errors.push(`Local safety scan: Restricted keyword detected: "${word}"`);
     }
   }

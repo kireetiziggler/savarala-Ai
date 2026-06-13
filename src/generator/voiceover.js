@@ -30,28 +30,126 @@ export function getAudioDuration(filePath) {
   });
 }
 
-// Generate voiceover audio using Edge TTS
-async function generateEdgeTTS(text, outputPath, locale) {
+// Aligns word boundary timestamps from processed TTS text back to original narration words
+function normalizeForMatching(word) {
+  let normalized = word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim();
+  
+  // Map tech contractions/acronyms to expected spoken form without spaces
+  const mappings = {
+    'json': 'jayson',
+    'sql': 'sequel',
+    'nosql': 'nosequel',
+    'devs': 'developers',
+    'dev': 'developer',
+    'config': 'configuration'
+  };
+  
+  if (mappings[normalized]) {
+    return mappings[normalized];
+  }
+  return normalized;
+}
+
+function alignTimings(originalWords, ttsTimings) {
+  const aligned = [];
+  let ttsIdx = 0;
+  
+  for (let i = 0; i < originalWords.length; i++) {
+    const origWord = originalWords[i];
+    const normalizedOrig = normalizeForMatching(origWord);
+    
+    if (!normalizedOrig) {
+      // Pure punctuation: assign timing of preceding word or start at 0
+      const prev = aligned[aligned.length - 1] || { start: 0, end: 0 };
+      aligned.push({ word: origWord, start: prev.end, end: prev.end });
+      continue;
+    }
+    
+    let start = -1;
+    let end = -1;
+    let accumulatedText = "";
+    let consumedCount = 0;
+    
+    // Safety guardrail: consume at most 5 TTS words to align a single original word
+    while (ttsIdx < ttsTimings.length && consumedCount < 5) {
+      const ttsWordObj = ttsTimings[ttsIdx];
+      const normalizedTts = normalizeForMatching(ttsWordObj.word);
+      accumulatedText += normalizedTts;
+      
+      if (start === -1) start = ttsWordObj.start;
+      end = ttsWordObj.end;
+      
+      ttsIdx++;
+      consumedCount++;
+      
+      // Match check
+      if (accumulatedText.includes(normalizedOrig) || normalizedOrig.includes(accumulatedText)) {
+        if (accumulatedText.length >= normalizedOrig.length) {
+          break;
+        }
+      }
+    }
+    
+    if (consumedCount === 5 && ttsIdx < ttsTimings.length) {
+      console.warn(`[Subtitle Sync Warning] Alignment fallback hit for word "${origWord}" (normalized: "${normalizedOrig}"). Accumulated: "${accumulatedText}". Prevents runaway drift.`);
+    }
+    
+    aligned.push({
+      word: origWord,
+      start: start !== -1 ? start : (aligned[aligned.length - 1]?.end || 0),
+      end: end !== -1 ? end : (aligned[aligned.length - 1]?.end || 0)
+    });
+  }
+  
+  return aligned;
+}
+
+// Generate voiceover audio using Edge TTS and capture word boundary timestamps
+async function generateEdgeTTS(processedText, outputPath, locale, jsonOutputPath, originalText) {
   try {
     const tts = new MsEdgeTTS();
-    // Default to Indian English if not specified
     const voice = locale || 'en-IN-NeerjaNeural';
     
-    // Config: voice name, audio output format
-    await tts.setMetadata(voice, 'audio-24khz-48kbitrate-mono-mp3');
+    // Set metadata and request word boundary markers
+    await tts.setMetadata(voice, 'audio-24khz-48kbitrate-mono-mp3', {
+      wordBoundaryEnabled: true
+    });
     
-    // Parent directory must be passed to toFile
-    const parentDir = path.dirname(outputPath);
-    const result = await tts.toFile(parentDir, text);
+    const { audioStream, metadataStream } = await tts.toStream(processedText);
     
-    // Ensure the output file matches the expected outputPath using normalized paths
-    const normResultPath = path.resolve(result.audioFilePath);
-    const normOutputPath = path.resolve(outputPath);
-    if (normResultPath !== normOutputPath) {
-      if (fs.existsSync(normOutputPath)) {
-        fs.unlinkSync(normOutputPath);
+    const audioWriter = fs.createWriteStream(outputPath);
+    audioStream.pipe(audioWriter);
+    
+    const ttsTimings = [];
+    metadataStream.on('data', (chunk) => {
+      try {
+        const textDecoder = new TextDecoder();
+        const metadataStr = textDecoder.decode(chunk);
+        const parsed = JSON.parse(metadataStr);
+        if (parsed.Metadata && parsed.Metadata[0] && parsed.Metadata[0].Type === 'WordBoundary') {
+          const boundary = parsed.Metadata[0].Data;
+          ttsTimings.push({
+            word: boundary.text.Text,
+            start: boundary.Offset / 10000000,
+            end: (boundary.Offset + boundary.Duration) / 10000000
+          });
+        }
+      } catch (err) {
+        // Ignore JSON/parsing warnings
       }
-      fs.renameSync(normResultPath, normOutputPath);
+    });
+    
+    await new Promise((resolve, reject) => {
+      audioWriter.on('finish', resolve);
+      audioWriter.on('error', reject);
+    });
+    
+    // Align timings back to original script narration
+    if (jsonOutputPath && ttsTimings.length > 0 && originalText) {
+      const originalWords = originalText.trim().split(/\s+/);
+      const alignedTimings = alignTimings(originalWords, ttsTimings);
+      fs.writeFileSync(jsonOutputPath, JSON.stringify(alignedTimings, null, 2), 'utf-8');
+      console.log(`Aligned word boundary timestamps saved at: ${jsonOutputPath}`);
     }
     
     console.log(`Edge TTS Voiceover generated at: ${outputPath}`);
@@ -99,8 +197,33 @@ async function generateElevenLabsTTS(text, outputPath, voiceId, apiKey) {
   }
 }
 
+// Preprocess text for better pronunciation of technical terms
+function preprocessTextForTTS(text) {
+  return text
+    .replace(/\bAPI\b/g, 'A P I')
+    .replace(/\bAPIs\b/g, 'A P I s')
+    .replace(/\bUI\b/g, 'U I')
+    .replace(/\bQA\b/g, 'Q A')
+    .replace(/\bURL\b/g, 'U R L')
+    .replace(/\bURLs\b/g, 'U R L s')
+    .replace(/\bnpm\b/gi, 'n p m')
+    .replace(/\bJSON\b/gi, 'jay-son')
+    .replace(/\bVS Code\b/gi, 'V S Code')
+    .replace(/\bCI\/CD\b/gi, 'C I C D')
+    .replace(/\bCSS\b/gi, 'C S S')
+    .replace(/\bHTML\b/gi, 'H T M L')
+    .replace(/\bIDE\b/gi, 'I D E')
+    .replace(/\bSQL\b/gi, 'sequel')
+    .replace(/\bGitHub\b/gi, 'Git Hub')
+    .replace(/\bGitlab\b/gi, 'Git Lab')
+    .replace(/\bNoSQL\b/gi, 'no-sequel')
+    .replace(/\bdevs\b/gi, 'developers')
+    .replace(/\bdev\b/gi, 'developer')
+    .replace(/\bconfig\b/gi, 'configuration');
+}
+
 // Main generation function
-export async function generateVoiceover(text, outputPath) {
+export async function generateVoiceover(text, outputPath, jsonOutputPath) {
   const provider = (process.env.TTS_PROVIDER || 'edge').toLowerCase();
   const locale = process.env.VOICEOVER_LOCALE;
   const elevenLabsKey = process.env.ELEVENLABS_API_KEY;
@@ -112,20 +235,42 @@ export async function generateVoiceover(text, outputPath) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  if (provider === 'elevenlabs' && elevenLabsKey) {
-    console.log('Generating premium voiceover with ElevenLabs...');
-    await generateElevenLabsTTS(text, outputPath, elevenLabsVoiceId, elevenLabsKey);
-  } else {
-    if (provider === 'elevenlabs') {
-      console.warn('ElevenLabs API key is missing. Falling back to free Microsoft Edge TTS.');
+  const processedText = preprocessTextForTTS(text);
+
+  let duration = 0;
+  let attempts = 0;
+  
+  while (duration === 0 && attempts < 3) {
+    attempts++;
+    try {
+      if (provider === 'elevenlabs' && elevenLabsKey) {
+        console.log(`Generating premium voiceover with ElevenLabs (attempt ${attempts})...`);
+        await generateElevenLabsTTS(processedText, outputPath, elevenLabsVoiceId, elevenLabsKey);
+      } else {
+        if (provider === 'elevenlabs') {
+          console.warn('ElevenLabs API key is missing. Falling back to free Microsoft Edge TTS.');
+        }
+        console.log(`Generating free voiceover with Microsoft Edge TTS (attempt ${attempts})...`);
+        await generateEdgeTTS(processedText, outputPath, locale, jsonOutputPath, text);
+      }
+
+      duration = await getAudioDuration(outputPath);
+    } catch (err) {
+      console.error(`Voiceover generation attempt ${attempts} failed:`, err.message);
+      duration = 0;
     }
-    console.log('Generating free voiceover with Microsoft Edge TTS...');
-    await generateEdgeTTS(text, outputPath, locale);
+
+    if (duration === 0 && attempts < 3) {
+      console.warn(`[TTS Warning] Generated audio has 0.00s duration or failed. Retrying in 2 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
   }
 
-  // Get duration
-  const duration = await getAudioDuration(outputPath);
-  console.log(`Voiceover duration measured: ${duration.toFixed(2)}s`);
+  if (duration === 0) {
+    console.error(`[TTS Error] Failed to generate valid voiceover after 3 attempts for text: "${text}"`);
+  } else {
+    console.log(`Voiceover duration measured: ${duration.toFixed(2)}s`);
+  }
   
   return {
     filePath: outputPath,

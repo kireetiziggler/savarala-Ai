@@ -70,6 +70,16 @@ async function main() {
         break;
       }
 
+      case 'generate-video': {
+        const type = args[1] || 'short';
+        if (type !== 'short' && type !== 'long') {
+          console.error('Error: type must be "short" or "long"');
+          return;
+        }
+        await runGenerationOnly(type);
+        break;
+      }
+
       default:
         console.error(`Unknown command: ${command}`);
         printHelp();
@@ -90,7 +100,9 @@ Commands:
   scrape              Runs the web scraper to fetch latest trends from Reddit, GitHub, Google.
   select-topic [type] Simulates trend scraping and runs Gemini to pick a topic (short/long).
   test-render         Generates a fast 5-second video to verify Puppeteer & FFmpeg works.
-  run-workflow [type] Executes the entire loop (Research -> Select -> Script -> Voice -> Render -> QC -> Upload).
+  generate-video [type] Runs the full production loop (Select -> Script -> Voice -> Render -> QC)
+                      without uploading. Saves output to output/ for your manual review.
+  run-workflow [type] Executes the entire loop including automated YouTube upload.
                       Type is either 'short' (default) or 'long'.
   `);
 }
@@ -140,6 +152,7 @@ async function runWorkflow(type) {
 
     // 7. Quality Control
     db.updateVideo(videoEntry.id, { status: 'running_qc' });
+    scriptPkg.type = type; // Fix: Ensure type is passed to QC
     const qc = await runQualityControl(scriptPkg, videoPath, thumbnailPath);
     if (!qc.passed) {
       db.updateVideo(videoEntry.id, { 
@@ -168,6 +181,84 @@ async function runWorkflow(type) {
   }
 }
 
+async function runGenerationOnly(type) {
+  console.log(`\n=================== STARTING ${type.toUpperCase()} GENERATION (REVIEW MODE) ===================`);
+  
+  // 1. Scrape Trends
+  const trendData = await scrapeDailyTrends();
+  
+  // 2. Select Topic
+  const topicInfo = await selectDailyTopic(trendData, type);
+  
+  // 3. Generate Script, Storyboard and Metadata
+  const scriptPkg = await generateScriptAndMetadata(topicInfo);
+  
+  // 4. Save to Database
+  const videoEntry = db.addVideo({
+    topic: topicInfo.topic,
+    type: type,
+    title: scriptPkg.title,
+    script: scriptPkg.fullScript,
+    description: scriptPkg.description,
+    tags: scriptPkg.tags,
+    hashtags: scriptPkg.hashtags,
+    status: 'generating'
+  });
+
+  const outputDir = path.join(process.cwd(), 'output');
+  const videoPath = path.join(outputDir, `${videoEntry.id}_video.mp4`);
+  const thumbnailPath = type === 'long' ? path.join(outputDir, `${videoEntry.id}_thumbnail.jpg`) : null;
+
+  try {
+    // 5. Render Video (Voiceovers, Puppeteer captures, FFmpeg stitch)
+    db.updateVideo(videoEntry.id, { status: 'rendering' });
+    await renderVideo(scriptPkg, type, videoPath);
+
+    // 6. Generate Thumbnail (if long-form)
+    if (type === 'long') {
+      db.updateVideo(videoEntry.id, { status: 'generating_thumbnail' });
+      const thumbData = {
+        ...scriptPkg.thumbnail,
+        badge: topicInfo.category
+      };
+      await generateThumbnail(thumbData, thumbnailPath);
+    }
+
+    // 7. Quality Control
+    db.updateVideo(videoEntry.id, { status: 'running_qc' });
+    scriptPkg.type = type; // Fix: Ensure type is passed to QC
+    const qc = await runQualityControl(scriptPkg, videoPath, thumbnailPath);
+    if (!qc.passed) {
+      db.updateVideo(videoEntry.id, { 
+        status: 'qc_failed', 
+        errorLog: `QC errors: ${qc.errors.join(', ')}` 
+      });
+      console.error('❌ Quality Control checks failed. Review video logs.');
+      return;
+    }
+
+    db.updateVideo(videoEntry.id, { status: 'ready_for_review' });
+
+    console.log(`\n=================== GENERATION COMPLETED (REVIEW MODE) ===================`);
+    console.log(`✅ Video package ready for your review:`);
+    console.log(`- Video File: file:///${videoPath.replace(/\\/g, '/')}`);
+    if (thumbnailPath) {
+      console.log(`- Thumbnail File: file:///${thumbnailPath.replace(/\\/g, '/')}`);
+    }
+    console.log(`- Title: ${scriptPkg.title}`);
+    console.log(`- Description & Tags saved to database.json under ID: ${videoEntry.id}`);
+    console.log(`Once you are satisfied with this output, you can push code to GitHub to authorize daily uploads.`);
+
+  } catch (generationError) {
+    console.error(`\n❌ Generation failed for video DB ID ${videoEntry.id}:`, generationError.message);
+    db.updateVideo(videoEntry.id, { 
+      status: 'failed', 
+      errorLog: generationError.message 
+    });
+    throw generationError;
+  }
+}
+
 // Generate a fast 5-second test video with mock data to test local browser and ffmpeg rendering
 async function runTestRender() {
   console.log('\nRunning test-render pipeline check (5 seconds, no API credentials required)...');
@@ -180,15 +271,22 @@ async function runTestRender() {
         sceneIndex: 1,
         narration: "Welcome to this fast automation test rendering. We are checking the code layout now.",
         visualType: "code",
+        zoomState: "zoom_in_center",
         visualParams: {
           language: "javascript",
-          code: "const playwright = require('playwright');\n(async () => {\n  const browser = await playwright.chromium.launch();\n  console.log('Renderer works!');\n  await browser.close();\n})();"
+          code: "const playwright = require('playwright');\n(async () => {\n  const browser = await playwright.chromium.launch();\n  console.log('Renderer works!');\n  await browser.close();\n})();",
+          highlight: "3" // Spotlight line 3
+        },
+        cursor: {
+          action: "click",
+          line: 3
         }
       },
       {
         sceneIndex: 2,
         narration: "And here is the slide container layout showing customized bullets and animated captions.",
         visualType: "slide",
+        zoomState: "pan_right",
         visualParams: {
           title: "Rendering pipeline is OK!",
           bullets: ["Frame captures working", "Audio text syncing okay", "FFmpeg stitch running"],

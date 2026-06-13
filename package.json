@@ -10,7 +10,7 @@
     "test-render": "node src/index.js test-render"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "ffmpeg-static": "^5.2.0",

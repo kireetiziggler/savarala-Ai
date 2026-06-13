@@ -4,14 +4,21 @@ const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 
 // Scrape Reddit communities using public JSON feeds (no API keys needed)
 async function fetchRedditTrends() {
-  const subreddits = ['softwaretesting', 'selenium', 'learnprogramming', 'artificial'];
+  const subreddits = ['webdev', 'reactjs', 'nextjs', 'LocalLLaMA', 'artificial', 'softwaretesting'];
   const trends = [];
 
   for (const sub of subreddits) {
     try {
       const url = `https://www.reddit.com/r/${sub}/hot.json?limit=10`;
       const response = await axios.get(url, {
-        headers: { 'User-Agent': USER_AGENT }
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Cache-Control': 'max-age=0'
+        }
       });
       
       const posts = response.data?.data?.children || [];
@@ -28,7 +35,7 @@ async function fetchRedditTrends() {
         }
       });
     } catch (error) {
-      console.error(`Failed to fetch Reddit trends for r/${sub}:`, error.message);
+      console.warn(`[Scraper Warning] Reddit r/${sub} blocked or rate-limited (Status ${error.response?.status || 'network error'}). The topic selector will fallback safely.`);
     }
   }
   return trends;
@@ -44,19 +51,23 @@ async function fetchGithubTrending() {
     });
     const html = response.data;
     
-    // Simple regex parser to extract trending repository names and descriptions
-    // Repository title pattern: href="/owner/name"
-    const repoRegex = /href="([^"/]+)\/([^"/]+)"\s+data-hydro-click/g;
-    // Description pattern
-    const descRegex = /<p class="col-9 color-fg-muted my-1 pr-4">([\s\S]*?)<\/p>/g;
-    
-    let match;
+    // Split HTML by article container to isolate each repository block
+    const articles = html.split('<article class="Box-row">');
     const repos = [];
-    while ((match = repoRegex.exec(html)) !== null) {
-      const owner = match[1].trim();
-      const name = match[2].trim();
-      if (!repos.includes(`${owner}/${name}`)) {
-        repos.push(`${owner}/${name}`);
+    
+    // Skip the first split since it is the header HTML before the first article
+    for (let i = 1; i < articles.length; i++) {
+      const block = articles[i];
+      const match = block.match(/href="\/([a-zA-Z0-9-_\.]+)\/([a-zA-Z0-9-_\.]+)"/);
+      if (match) {
+        const owner = match[1].trim();
+        const name = match[2].trim();
+        if (!['sponsors', 'trending', 'apps', 'features', 'site'].includes(owner)) {
+          const repo = `${owner}/${name}`;
+          if (!repos.includes(repo)) {
+            repos.push(repo);
+          }
+        }
       }
       if (repos.length >= 10) break;
     }
@@ -82,9 +93,13 @@ async function fetchGoogleTrends() {
 
   for (const geo of geos) {
     try {
-      const url = `https://trends.google.com/trends/trendingsearches/daily/rss?geo=${geo}`;
+      const url = `https://trends.google.com/trending/rss?geo=${geo}`;
       const response = await axios.get(url, {
-        headers: { 'User-Agent': USER_AGENT }
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Accept': 'application/rss+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9'
+        }
       });
       const xml = response.data;
 
@@ -113,7 +128,7 @@ async function fetchGoogleTrends() {
         });
       });
     } catch (error) {
-      console.error(`Failed to fetch Google Trends for ${geo}:`, error.message);
+      console.warn(`[Scraper Warning] Google Trends for ${geo} timed out or blocked. The topic selector will fallback safely.`);
     }
   }
   return trends;

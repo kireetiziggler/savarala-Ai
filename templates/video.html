@@ -12,7 +12,7 @@
     }
 
     body {
-      background-color: #0b0f19;
+      background-color: #080b11;
       color: #f3f4f6;
       font-family: 'Inter', sans-serif;
       overflow: hidden;
@@ -24,23 +24,32 @@
       width: 100%;
       height: 100%;
       position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
     }
 
-    /* Aspect Ratio Containers */
-    .viewport-short {
+    /* Video Frame Sizing */
+    #app.short {
       width: 1080px;
       height: 1920px;
-      transform: scale(0.5); /* Scaled down for host preview if needed, but we capture at native size */
-      transform-origin: center center;
     }
 
-    .viewport-long {
+    #app.long {
       width: 1920px;
       height: 1080px;
+    }
+
+    /* 1. Viewport Zoom & Pan Wrapper */
+    #scene-viewport {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transform-origin: center center;
     }
 
     /* Main View Containers */
@@ -60,30 +69,33 @@
       display: flex;
     }
 
-    /* 1. Slide Layout */
+    /* 2. Slide Layout */
     .slide-layout {
       width: 85%;
-      height: 70%;
-      background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 32px;
-      padding: 60px;
+      height: 65%;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(25px);
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      border-radius: 40px;
+      padding: 60px 80px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 
+        0 30px 60px -15px rgba(0, 0, 0, 0.6),
+        0 0 50px rgba(99, 102, 241, 0.1);
     }
 
     .slide-title {
       font-family: 'Outfit', sans-serif;
-      font-size: 72px;
+      font-size: 80px;
       font-weight: 900;
-      background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 40px;
+      margin-bottom: 50px;
       line-height: 1.2;
+      letter-spacing: -1px;
     }
 
     .slide-bullets {
@@ -91,47 +103,56 @@
     }
 
     .slide-bullets li {
-      font-size: 44px;
+      font-size: 42px;
       line-height: 1.6;
-      margin-bottom: 25px;
+      margin-bottom: 30px;
       display: flex;
       align-items: center;
       font-weight: 500;
+      color: #94a3b8;
+    }
+
+    .slide-bullets li.active-bullet {
+      color: #ffffff;
+      transform: translateX(15px);
     }
 
     .slide-bullets li::before {
       content: "✦";
-      color: #38bdf8;
-      margin-right: 20px;
+      color: #818cf8;
+      margin-right: 25px;
       font-size: 36px;
+      text-shadow: 0 0 15px rgba(129, 140, 248, 0.5);
     }
 
     .highlight-text {
       color: #ffeb3b;
-      text-shadow: 0 0 10px rgba(255, 235, 59, 0.3);
+      text-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
       font-weight: 700;
     }
 
-    /* 2. Code Editor Layout */
+    /* 3. Code Editor Layout */
     .code-layout {
       width: 90%;
-      height: 75%;
-      background: #1e1e2e;
-      border: 1px solid #313244;
-      border-radius: 24px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      height: 70%;
+      background: #0f0f16;
+      border: 2px solid #27273a;
+      border-radius: 28px;
+      box-shadow: 
+        0 40px 80px rgba(0,0,0,0.7),
+        0 0 40px rgba(139, 92, 246, 0.08);
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
     .editor-header {
-      background: #11111b;
-      height: 60px;
-      padding: 0 24px;
+      background: #07070a;
+      height: 65px;
+      padding: 0 28px;
       display: flex;
       align-items: center;
-      border-bottom: 1px solid #313244;
+      border-bottom: 2px solid #1e1e2f;
       position: relative;
     }
 
@@ -141,22 +162,23 @@
     }
 
     .editor-button {
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
       border-radius: 50%;
     }
 
-    .btn-red { background: #f38ba8; }
-    .btn-yellow { background: #f9e2af; }
-    .btn-green { background: #a6e3a1; }
+    .btn-red { background: #ff5f56; }
+    .btn-yellow { background: #ffbd2e; }
+    .btn-green { background: #27c93f; }
 
     .editor-title {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
       font-family: 'Fira Code', monospace;
-      color: #cdd6f4;
-      font-size: 22px;
+      color: #797993;
+      font-size: 20px;
+      font-weight: 600;
     }
 
     .editor-body {
@@ -168,32 +190,46 @@
 
     .line-numbers {
       font-family: 'Fira Code', monospace;
-      color: #585b70;
-      font-size: 28px;
+      color: #3f3f5a;
+      font-size: 26px;
       text-align: right;
-      padding-right: 30px;
+      padding-right: 35px;
       user-select: none;
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
     .code-content {
       flex: 1;
       font-family: 'Fira Code', monospace;
-      font-size: 28px;
+      font-size: 26px;
       color: #cdd6f4;
       white-space: pre-wrap;
-      line-height: 1.6;
+      line-height: 1.7;
+      position: relative;
     }
 
-    /* Code Syntax Highlighting Presets */
-    .keyword { color: #cba6f7; font-weight: bold; }
-    .string { color: #a6e3a1; }
-    .function { color: #89b4fa; }
-    .comment { color: #6c7086; font-style: italic; }
-    .number { color: #fab387; }
-    .builtin { color: #89dceb; }
+    .code-line-span {
+      display: block;
+      width: 100%;
+      padding: 0 10px;
+      border-radius: 6px;
+    }
 
-    /* 3. Media Layout */
+    .code-line-span.spotlight-highlight {
+      background: rgba(139, 92, 246, 0.15);
+      border-left: 4px solid #8b5cf6;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
+    }
+
+    /* Code Syntax Highlighting */
+    .keyword { color: #f472b6; font-weight: bold; }
+    .string { color: #34d399; }
+    .function { color: #60a5fa; }
+    .comment { color: #4b5563; font-style: italic; }
+    .number { color: #fb923c; }
+    .builtin { color: #22d3ee; }
+
+    /* 4. Media Layout */
     .media-layout {
       position: absolute;
       top: 0;
@@ -207,7 +243,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transform-origin: center center;
     }
 
     .media-overlay {
@@ -216,142 +251,240 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(to bottom, rgba(11, 15, 25, 0.4), rgba(11, 15, 25, 0.85));
+      background: linear-gradient(to bottom, rgba(8, 11, 17, 0.25) 0%, rgba(8, 11, 17, 0.85) 90%);
       z-index: 2;
     }
 
-    /* Subtitles Overlay (Overlaying on top of everything) */
+    /* Subtitles (Captions Overlay) */
     .subtitle-panel {
       position: absolute;
-      bottom: 20%;
       left: 50%;
       transform: translateX(-50%);
-      width: 85%;
+      width: 80%;
       text-align: center;
       z-index: 100;
       pointer-events: none;
     }
 
+    /* Safe Zones for Captions */
+    #app.short .subtitle-panel {
+      bottom: 12%; /* Clear layout space at the bottom */
+    }
+
+    #app.long .subtitle-panel {
+      bottom: 12%; /* Lower-third zone for 16:9 Long videos */
+    }
+
     .subtitles {
       font-family: 'Outfit', sans-serif;
-      font-size: 64px; /* Mobile friendly */
-      font-weight: 900;
-      color: #ffffff;
-      text-transform: uppercase;
-      line-height: 1.3;
-      letter-spacing: 1.5px;
-      text-shadow: 
-        -3px -3px 0 #000,  
-         3px -3px 0 #000,
-        -3px  3px 0 #000,
-         3px  3px 0 #000,
-        -3px  0px 0 #000,
-         3px  0px 0 #000,
-         0px -3px 0 #000,
-         0px  3px 0 #000,
-         0px  5px 15px rgba(0,0,0,0.8);
-      word-wrap: break-word;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .subtitles span {
       display: inline-block;
-      margin: 0 8px;
-      transition: color 0.1s ease;
+      margin: 0 18px;
+      transition: all 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .subtitles span.active {
+    .subtitles span.active-focus {
       color: #ffeb3b;
-      transform: scale(1.08);
+      font-size: 64px;
+      font-weight: 900;
+      text-transform: uppercase;
+      transform: scale(1.25);
       text-shadow: 
         -3px -3px 0 #000,  
          3px -3px 0 #000,
         -3px  3px 0 #000,
          3px  3px 0 #000,
-         0px 0px 15px rgba(255, 235, 59, 0.6);
+         0px 0px 25px rgba(255, 235, 59, 0.6);
     }
 
-    /* Video Frame Sizing (Controlled by wrapper class) */
-    #app.short {
-      width: 1080px;
-      height: 1920px;
+    .subtitles span.side-focus {
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 44px;
+      font-weight: 700;
+      text-transform: uppercase;
+      transform: scale(0.85);
+      text-shadow: 
+        -2px -2px 0 #000,  
+         2px -2px 0 #000,
+        -2px  2px 0 #000,
+         2px  2px 0 #000;
     }
 
-    #app.long {
-      width: 1920px;
-      height: 1080px;
+    /* Tool Logo Badges */
+    .tool-logo-badge {
+      position: absolute;
+      top: 40px;
+      right: 50px;
+      width: 70px;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+    .tool-logo-badge svg {
+      width: 45px;
+      height: 45px;
+    }
+    .tool-logo-badge-header {
+      position: absolute;
+      right: 28px;
+      height: 40px;
+      width: 40px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+    .tool-logo-badge-header svg {
+      width: 26px;
+      height: 26px;
     }
 
-    #app.short .slide-title { font-size: 60px; }
-    #app.short .slide-bullets li { font-size: 34px; }
-    #app.short .code-content { font-size: 22px; }
-    #app.short .line-numbers { font-size: 22px; }
-    #app.short .subtitles { font-size: 52px; }
-    #app.short .subtitle-panel { bottom: 35%; } /* Higher up for vertical Shorts to avoid UI overlap */
+    /* Top Video Progress Bar */
+    .progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 10px;
+      background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc);
+      box-shadow: 0 0 15px rgba(129, 140, 248, 0.6);
+      width: 0%;
+      z-index: 1000;
+    }
+
+    /* Animated Mouse Cursor Overlay */
+    .mouse-cursor {
+      position: absolute;
+      display: none;
+      z-index: 9999;
+      pointer-events: none;
+      width: 40px;
+      height: 40px;
+    }
+
+    .mouse-cursor svg {
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.5));
+    }
+
+    .click-pulse {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 35px;
+      height: 35px;
+      border: 3px solid #c084fc;
+      border-radius: 50%;
+      background: rgba(192, 132, 252, 0.2);
+      transform: scale(0);
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(192, 132, 252, 0.5);
+    }
+
+
+    /* Custom Responsive Styling Adjustments for Shorts (9:16) */
+    #app.short .slide-layout {
+      width: 90%;
+      height: 50%;
+      padding: 40px 30px;
+      transform: translateY(-220px);
+    }
+    #app.short .code-layout {
+      width: 95%;
+      height: 52%;
+      transform: translateY(-220px);
+    }
+    #app.short .slide-title { font-size: 54px; margin-bottom: 35px; }
+    #app.short .slide-bullets li { font-size: 32px; margin-bottom: 20px; }
+    #app.short .code-content { font-size: 20px; line-height: 1.6; }
+    #app.short .line-numbers { font-size: 20px; line-height: 1.6; padding-right: 25px; }
+    #app.short .subtitles { font-size: 48px; }
   </style>
 </head>
 <body>
   <div id="app" class="short">
-    <!-- 1. Slide Panel -->
-    <div id="slide-panel" class="view-panel">
-      <div class="slide-layout">
-        <h1 id="slide-title" class="slide-title">Mastering Playwright</h1>
-        <ul id="slide-bullets" class="slide-bullets">
-          <li>Fast and reliable end-to-end testing</li>
-          <li>Auto-waiting mechanisms</li>
-          <li>Trace viewer debugging</li>
-        </ul>
-      </div>
-    </div>
+    <!-- 1. Progress Bar -->
+    <div id="video-progress" class="progress-bar"></div>
 
-    <!-- 2. Code Panel -->
-    <div id="code-panel" class="view-panel">
-      <div class="code-layout">
-        <div class="editor-header">
-          <div class="editor-buttons">
-            <div class="editor-button btn-red"></div>
-            <div class="editor-button btn-yellow"></div>
-            <div class="editor-button btn-green"></div>
+    <!-- 2. Viewport Wrapper (Handles Panning / Zooms) -->
+    <div id="scene-viewport">
+      <!-- Slide Panel -->
+      <div id="slide-panel" class="view-panel">
+        <div class="slide-layout">
+          <div id="slide-tool-logo" class="tool-logo-badge"></div>
+          <h1 id="slide-title" class="slide-title">Mastering Playwright</h1>
+          <ul id="slide-bullets" class="slide-bullets"></ul>
+        </div>
+      </div>
+
+      <!-- Code Panel -->
+      <div id="code-panel" class="view-panel">
+        <div class="code-layout">
+          <div class="editor-header">
+            <div class="editor-buttons">
+              <div class="editor-button btn-red"></div>
+              <div class="editor-button btn-yellow"></div>
+              <div class="editor-button btn-green"></div>
+            </div>
+            <div id="editor-title" class="editor-title">test.spec.js</div>
+            <div id="code-tool-logo" class="tool-logo-badge-header"></div>
           </div>
-          <div id="editor-title" class="editor-title">test.spec.js</div>
+          <div class="editor-body">
+            <div id="line-numbers" class="line-numbers"></div>
+            <div id="code-content" class="code-content"></div>
+          </div>
         </div>
-        <div class="editor-body">
-          <div id="line-numbers" class="line-numbers">1<br>2<br>3<br>4<br>5</div>
-          <div id="code-content" class="code-content"></div>
+      </div>
+
+      <!-- Media Panel -->
+      <div id="media-panel" class="view-panel">
+        <div class="media-layout">
+          <div id="media-container" style="width:100%; height:100%;">
+            <img id="media-img" class="media-element" src="" style="display:none;" />
+            <video id="media-video" class="media-element" src="" muted loop style="display:none;"></video>
+          </div>
+          <div class="media-overlay"></div>
         </div>
       </div>
     </div>
 
-    <!-- 3. Media Panel -->
-    <div id="media-panel" class="view-panel">
-      <div class="media-layout">
-        <div id="media-container" style="width:100%; height:100%;">
-          <img id="media-img" class="media-element" src="" style="display:none;" />
-          <video id="media-video" class="media-element" src="" muted loop style="display:none;"></video>
-        </div>
-        <div class="media-overlay"></div>
-      </div>
-    </div>
-
-    <!-- Global Subtitles Layer -->
+    <!-- 3. Global Subtitles Layer -->
     <div class="subtitle-panel">
       <div id="subtitles-content" class="subtitles"></div>
+    </div>
+
+    <!-- 4. Simulated Mouse Cursor -->
+    <div id="editor-cursor" class="mouse-cursor">
+      <svg viewBox="0 0 24 24" width="36" height="36">
+        <path fill="#ffffff" stroke="#000000" stroke-width="1.5" d="M4.5 3v15.2l3.8-3.8 2.9 6.8 2.6-1.1-2.9-6.8 5.3-.4z"/>
+      </svg>
+      <div class="click-pulse"></div>
     </div>
   </div>
 
   <script>
-    // Self-contained syntax highlighter
+    // Syntax Highlighter Helper
     function highlightCode(code, lang) {
       if (!code) return '';
+      let html = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       
-      // Escape HTML
-      let html = code
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-
-      // Highlighting patterns
-      const keywords = /\b(const|let|var|function|return|import|from|async|await|describe|test|expect|class|extends|new|if|else|for|while|try|catch|def|import|as|from|def|assert|with)\b/g;
-      const builtins = /\b(console|log|page|browser|playwright|selenium|driver|webdriver|locator|click|goto|fill|waitForSelector|screenshot|window|document|String|Number|Boolean|Array|Object)\b/g;
+      const keywords = /\b(const|let|var|function|return|import|from|async|await|describe|test|expect|class|extends|new|if|else|for|while|try|catch|def|assert|with)\b/g;
+      const builtins = /\b(console|log|page|browser|playwright|selenium|driver|webdriver|locator|click|goto|fill|waitForSelector|screenshot|window|document)\b/g;
       const strings = /(["'`])(.*?)\1/g;
       const comments = /(\/\/.*|#.*)/g;
       const numbers = /\b(\d+)\b/g;
@@ -366,7 +499,7 @@
       return html;
     }
 
-    // Global update function driven by Puppeteer
+    // Driver Update Function (Called frame-by-frame by Puppeteer)
     window.updateState = function(stateJson) {
       const state = JSON.parse(stateJson);
       const app = document.getElementById('app');
@@ -374,7 +507,13 @@
       // Set aspect ratio class
       app.className = state.videoType === 'short' ? 'short' : 'long';
 
-      // 1. Setup Active View
+      // 1. Update Video Progress Bar (Top)
+      const progressBar = document.getElementById('video-progress');
+      if (state.overallProgress !== undefined) {
+        progressBar.style.width = `${state.overallProgress * 100}%`;
+      }
+
+      // 2. Setup Active View
       const panels = ['slide-panel', 'code-panel', 'media-panel'];
       panels.forEach(p => document.getElementById(p).classList.remove('active'));
 
@@ -384,11 +523,14 @@
         
         const bulletsContainer = document.getElementById('slide-bullets');
         bulletsContainer.innerHTML = '';
-        state.visualParams.bullets.forEach(b => {
+        
+        // Active bullet spotlight effect (focuses on the bullet being spoken)
+        // If highlight keyword exists, spotlight that bullet
+        state.visualParams.bullets.forEach((b, idx) => {
           const li = document.createElement('li');
           
-          // Apply highlight if word is present
           if (state.visualParams.highlight && b.toLowerCase().includes(state.visualParams.highlight.toLowerCase())) {
+            li.classList.add('active-bullet');
             const regex = new RegExp(`(${state.visualParams.highlight})`, 'gi');
             li.innerHTML = b.replace(regex, '<span class="highlight-text">$1</span>');
           } else {
@@ -401,19 +543,83 @@
         document.getElementById('code-panel').classList.add('active');
         document.getElementById('editor-title').innerText = `editor.${state.visualParams.language === 'python' ? 'py' : 'js'}`;
         
-        // Render Line Numbers
         const codeLines = state.visualParams.code.split('\n');
+        
+        // Display Line Numbers
         const numContainer = document.getElementById('line-numbers');
         numContainer.innerHTML = codeLines.map((_, i) => i + 1).join('<br>');
 
-        // Typewriter/Progressive code disclosure based on elapsed scene time
+        // Typewriter / Progressive reveal based on scene progress
         const totalChars = state.visualParams.code.length;
-        const revealPercent = Math.min(1, state.sceneProgress || 1);
-        const charsToReveal = Math.floor(totalChars * revealPercent);
+        const charsToReveal = Math.floor(totalChars * Math.min(1, state.sceneProgress || 1));
         const codeToRender = state.visualParams.code.substring(0, charsToReveal);
 
         const contentContainer = document.getElementById('code-content');
-        contentContainer.innerHTML = highlightCode(codeToRender, state.visualParams.language);
+        contentContainer.innerHTML = '';
+
+        // Render line-by-line to allow line spotlights/highlights
+        const renderedLines = codeToRender.split('\n');
+        renderedLines.forEach((lineText, idx) => {
+          const lineSpan = document.createElement('span');
+          lineSpan.className = 'code-line-span';
+          lineSpan.innerHTML = highlightCode(lineText, state.visualParams.language) || '&nbsp;';
+          
+          // Spotlight highlight line specified by index (e.g. state.visualParams.highlight line number)
+          const targetLine = parseInt(state.visualParams.highlight, 10);
+          if (!isNaN(targetLine) && (idx + 1) === targetLine) {
+            lineSpan.classList.add('spotlight-highlight');
+          }
+          contentContainer.appendChild(lineSpan);
+        });
+
+        // 3. Cursor Click / Hover Simulation
+        const cursorEl = document.getElementById('editor-cursor');
+        if (state.cursor && state.cursor.action && state.cursor.action !== 'none') {
+          cursorEl.style.display = 'block';
+          
+          // Calculate target coordinates dynamically based on the actual rendered line span
+          const lineIndex = (state.cursor.line || 1) - 1;
+          const contentContainer = document.getElementById('code-content');
+          const lineSpans = contentContainer.getElementsByClassName('code-line-span');
+          const targetLineSpan = lineSpans[lineIndex] || lineSpans[0];
+          
+          let targetX = app.className === 'short' ? 280 : 350;
+          let targetY = app.className === 'short' ? 220 : 160;
+          
+          if (targetLineSpan) {
+            const rect = targetLineSpan.getBoundingClientRect();
+            // Align the pointer to be inside the line element horizontally and centered vertically
+            targetX = rect.left + (app.className === 'short' ? 80 : 120);
+            targetY = rect.top + (rect.height / 2);
+          }
+
+          // Animate cursor moving from bottom right towards the line
+          const startX = app.className === 'short' ? 800 : 1200;
+          const startY = app.className === 'short' ? 1200 : 700;
+
+          const progress = state.sceneProgress || 0;
+          // Easing ease-out curve
+          const easedProgress = 1 - Math.pow(1 - progress, 3);
+          
+          const currentX = startX + (targetX - startX) * easedProgress;
+          const currentY = startY + (targetY - startY) * easedProgress;
+
+          cursorEl.style.left = `${currentX}px`;
+          cursorEl.style.top = `${currentY}px`;
+
+          // Deterministic click pulse driven by scene progress
+          const pulseEl = cursorEl.querySelector('.click-pulse');
+          if (state.cursor.action === 'click' && progress > 0.75) {
+            const clickProgress = (progress - 0.75) / 0.25;
+            pulseEl.style.transform = `scale(${clickProgress * 1.8})`;
+            pulseEl.style.opacity = 1 - clickProgress;
+            pulseEl.style.display = 'block';
+          } else {
+            pulseEl.style.display = 'none';
+          }
+        } else {
+          cursorEl.style.display = 'none';
+        }
 
       } else if (state.visualType === 'stock_media') {
         document.getElementById('media-panel').classList.add('active');
@@ -428,35 +634,140 @@
           video.style.display = 'block';
           if (video.src !== mediaUrl) {
             video.src = mediaUrl;
-            video.play().catch(e => console.log('Video autoplay blocked/failed', e));
+            video.play().catch(e => console.log('Video play failed', e));
           }
-          
-          // Ken burns scale transition
-          const scale = 1 + 0.1 * (state.sceneProgress || 0);
-          video.style.transform = `scale(${scale})`;
         } else if (mediaUrl) {
           video.style.display = 'none';
           img.style.display = 'block';
           img.src = mediaUrl;
-          
-          const scale = 1 + 0.15 * (state.sceneProgress || 0);
-          img.style.transform = `scale(${scale})`;
         }
       }
 
-      // 2. Render Subtitles & Highlight Active Word
+      // Hide cursor if not in code editor
+      if (state.visualType !== 'code') {
+        document.getElementById('editor-cursor').style.display = 'none';
+      }
+
+      // 4. Zoom / Pan Transforms on Viewport (Pattern Interrupts)
+      const viewport = document.getElementById('scene-viewport');
+      const progress = state.sceneProgress || 0;
+      
+      if (state.zoomState === 'zoom_in_center') {
+        const scale = 1 + 0.15 * progress;
+        viewport.style.transform = `scale(${scale}) translate(0, 0)`;
+      } else if (state.zoomState === 'zoom_in_left') {
+        const scale = 1 + 0.2 * progress;
+        viewport.style.transform = `scale(${scale}) translate(${100 * progress}px, 0)`;
+      } else if (state.zoomState === 'zoom_in_right') {
+        const scale = 1 + 0.2 * progress;
+        viewport.style.transform = `scale(${scale}) translate(${-100 * progress}px, 0)`;
+      } else if (state.zoomState === 'pan_left') {
+        const scale = 1.1;
+        viewport.style.transform = `scale(${scale}) translate(${80 * (0.5 - progress)}px, 0)`;
+      } else if (state.zoomState === 'pan_right') {
+        const scale = 1.1;
+        viewport.style.transform = `scale(${scale}) translate(${-80 * (0.5 - progress)}px, 0)`;
+      } else {
+        viewport.style.transform = 'scale(1) translate(0, 0)';
+      }
+
+      // 5. Render Safe-Zone Subtitles (Dynamic 3-Word focus scrolling)
       const subtitleContainer = document.getElementById('subtitles-content');
       subtitleContainer.innerHTML = '';
 
       if (state.words && state.words.length > 0) {
-        state.words.forEach((w, idx) => {
+        const activeIdx = state.activeWordIndex || 0;
+        const start = Math.max(0, activeIdx - 1);
+        const end = Math.min(state.words.length - 1, activeIdx + 1);
+
+        for (let i = start; i <= end; i++) {
           const span = document.createElement('span');
-          span.innerText = w;
-          if (idx === state.activeWordIndex) {
-            span.classList.add('active');
+          span.innerText = state.words[i];
+          if (i === activeIdx) {
+            span.classList.add('active-focus');
+          } else {
+            span.classList.add('side-focus');
           }
           subtitleContainer.appendChild(span);
-        });
+        }
+      }
+
+      // 6. Dynamic Tool Logo detection & rendering
+      const TOOL_LOGOS = {
+        playwright: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" fill="#2EAD5F" fill-opacity="0.1" stroke="#2EAD5F" stroke-width="2"/>
+          <path d="M12 9l10 7-10 7V9z" fill="#2EAD5F"/>
+          <path d="M16 19a3 3 0 100-6 3 3 0 000 6z" fill="#42B883"/>
+        </svg>`,
+        selenium: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#00B0F0"/>
+          <text x="5" y="23" font-family="'Outfit', sans-serif" font-weight="900" font-size="18" fill="#ffffff">Se</text>
+        </svg>`,
+        chatgpt: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#10A37F"/>
+          <path d="M16 8v16M8 16h16M10.5 10.5l11 11M21.5 10.5l-11 11" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+        </svg>`,
+        cypress: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="13" stroke="#00B0FF" stroke-width="3"/>
+          <path d="M10 16a6 6 0 116 6h-6v-6z" fill="#00B0FF"/>
+        </svg>`,
+        vscode: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 5L8 13.5l5 2.5 9-9z" fill="#007ACC"/>
+          <path d="M8 13.5l14 10V5z" fill="#1F9CF0"/>
+        </svg>`,
+        javascript: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="6" fill="#F7DF1E"/>
+          <text x="13" y="24" font-family="'Outfit', sans-serif" font-weight="900" font-size="16" fill="#000000">JS</text>
+        </svg>`,
+        python: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 3c-4 0-7 2-7 6v2h7v1H9v3c0 4 3 6 7 6s7-2 7-6v-2h-7v-1h7V9c0-4-3-6-7-6z" fill="#3776AB"/>
+          <path d="M16 29c4 0 7-2 7-6v-2h-7v-1h7v-3c0-4-3-6-7-6s-7 2-7 6v2h7v1H9v3c0 4 3 6 7 6z" fill="#FFE873"/>
+        </svg>`,
+        github: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#181A1B"/>
+          <path d="M16 4a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.9 1.2 1.9 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.3-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.7.9 1.2 2 1.2 3.3 0 4.7-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A12 12 0 0016 4z" fill="#ffffff"/>
+        </svg>`
+      };
+
+      const slideLogo = document.getElementById('slide-tool-logo');
+      const codeLogo = document.getElementById('code-tool-logo');
+      
+      slideLogo.style.display = 'none';
+      codeLogo.style.display = 'none';
+
+      if (state.visualType === 'slide' || state.visualType === 'code') {
+        let detectedTool = null;
+        
+        if (state.visualParams && state.visualParams.logo) {
+          detectedTool = state.visualParams.logo.toLowerCase();
+        } else {
+          // Auto-detect based on textual content
+          const textToScan = (
+            (state.visualParams.title || '') + ' ' + 
+            (state.visualParams.bullets ? state.visualParams.bullets.join(' ') : '') + ' ' +
+            (state.visualParams.language || '') + ' ' +
+            (state.visualParams.code || '')
+          ).toLowerCase();
+
+          if (textToScan.includes('playwright')) detectedTool = 'playwright';
+          else if (textToScan.includes('selenium')) detectedTool = 'selenium';
+          else if (textToScan.includes('cypress')) detectedTool = 'cypress';
+          else if (textToScan.includes('chatgpt') || textToScan.includes('openai') || textToScan.includes('gpt')) detectedTool = 'chatgpt';
+          else if (textToScan.includes('vscode') || textToScan.includes('vs code') || textToScan.includes('editor')) detectedTool = 'vscode';
+          else if (textToScan.includes('javascript') || textToScan.includes('js')) detectedTool = 'javascript';
+          else if (textToScan.includes('python')) detectedTool = 'python';
+          else if (textToScan.includes('github') || textToScan.includes('git')) detectedTool = 'github';
+        }
+
+        if (detectedTool && TOOL_LOGOS[detectedTool]) {
+          if (state.visualType === 'slide') {
+            slideLogo.innerHTML = TOOL_LOGOS[detectedTool];
+            slideLogo.style.display = 'flex';
+          } else {
+            codeLogo.innerHTML = TOOL_LOGOS[detectedTool];
+            codeLogo.style.display = 'flex';
+          }
+        }
       }
     };
   </script>
