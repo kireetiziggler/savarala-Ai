@@ -9,6 +9,8 @@ on:
     # 02:30 PM UTC = 08:00 PM IST (Short 2)
     - cron: '30 14 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
+  repository_dispatch:
+    types: [trigger-workflow]
 
 jobs:
   run-agent:

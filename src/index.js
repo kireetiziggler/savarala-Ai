@@ -292,6 +292,15 @@ async function runTestRender() {
           bullets: ["Frame captures working", "Audio text syncing okay", "FFmpeg stitch running"],
           highlight: "pipeline"
         }
+      },
+      {
+        sceneIndex: 3,
+        narration: "Finally, let's verify our brand new AI-generated stock image background rendering.",
+        visualType: "stock_media",
+        zoomState: "zoom_in_left",
+        visualParams: {
+          keyword: "artificial intelligence"
+        }
       }
     ]
   };

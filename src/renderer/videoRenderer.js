@@ -64,6 +64,45 @@ async function fetchStockMedia(keyword, isVideo = true, videoType = 'long') {
   return null;
 }
 
+// Generate custom AI images using Hugging Face's serverless Inference API (completely free with a HF token)
+async function generateHFImage(prompt, videoType = 'long') {
+  const token = process.env.HF_TOKEN;
+  if (!token) {
+    console.log('[AI Image Generator] HF_TOKEN is not configured. Skipping Hugging Face generation.');
+    return null;
+  }
+
+  try {
+    const width = videoType === 'short' ? 1080 : 1920;
+    const height = videoType === 'short' ? 1920 : 1080;
+    const model = 'black-forest-labs/FLUX.1-schnell';
+    const url = `https://api-inference.huggingface.co/models/${model}`;
+    
+    console.log(`[AI Image Generator] Requesting Hugging Face Flux model for: "${prompt}"...`);
+    const response = await axios({
+      method: 'post',
+      url: url,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      data: JSON.stringify({
+        inputs: `${prompt}, professional high-quality 4k 3d digital art, modern software developer tech style, clean design, vibrant color scheme`,
+        parameters: {
+          width: width,
+          height: height
+        }
+      }),
+      responseType: 'arraybuffer'
+    });
+
+    return Buffer.from(response.data);
+  } catch (error) {
+    console.error('Hugging Face AI image generation failed:', error.message);
+    return null;
+  }
+}
+
 // Compile frame speed scale using FFmpeg atempo filter
 function scaleAudioSpeed(inputPath, outputPath, factor) {
   return new Promise((resolve, reject) => {
@@ -244,18 +283,47 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
       let localMediaUrl = null;
       if (scene.visualType === 'stock_media') {
         const keyword = scene.visualParams.keyword || 'technology';
-        console.log(`Fetching B-roll media for keyword: "${keyword}"...`);
-        const mediaUrl = await fetchStockMedia(keyword, true, videoType);
-        
-        if (mediaUrl) {
+        const mediaDest = path.join(sceneDir, `broll.jpg`);
+
+        // Try generating with Hugging Face first
+        if (process.env.HF_TOKEN) {
+          console.log(`Generating AI Visual via Hugging Face for: "${keyword}"...`);
+          const imgBuffer = await generateHFImage(keyword, videoType);
+          if (imgBuffer) {
+            fs.writeFileSync(mediaDest, imgBuffer);
+            localMediaUrl = `file:///${mediaDest.replace(/\\/g, '/')}`;
+          }
+        }
+
+        // Fallback to LoremFlickr (completely free and keyless stock photo matcher)
+        if (!localMediaUrl) {
+          console.log(`Hugging Face generation skipped or failed. Fetching keyless LoremFlickr fallback for: "${keyword}"...`);
+          const width = videoType === 'short' ? 1080 : 1920;
+          const height = videoType === 'short' ? 1920 : 1080;
+          const mediaUrl = `https://loremflickr.com/${width}/${height}/${encodeURIComponent(keyword)}`;
           try {
-            const ext = mediaUrl.includes('video') || mediaUrl.endsWith('.mp4') ? '.mp4' : '.jpg';
-            const mediaDest = path.join(sceneDir, `broll${ext}`);
-            console.log(`Downloading B-roll asset: ${mediaUrl} -> ${mediaDest}`);
+            console.log(`Downloading stock visual: ${mediaUrl} -> ${mediaDest}`);
             await downloadFile(mediaUrl, mediaDest);
             localMediaUrl = `file:///${mediaDest.replace(/\\/g, '/')}`;
           } catch (dlErr) {
-            console.error('Failed to download stock media. Falling back to slide...', dlErr.message);
+            console.error(`Failed to download LoremFlickr visual. Falling back to Pexels...`, dlErr.message);
+          }
+        }
+
+        // Fallback to Pexels if both failed
+        if (!localMediaUrl) {
+          console.log('LoremFlickr failed. Falling back to Pexels stock media...');
+          const mediaUrl = await fetchStockMedia(keyword, true, videoType);
+          if (mediaUrl) {
+            try {
+              const ext = mediaUrl.includes('video') || mediaUrl.endsWith('.mp4') ? '.mp4' : '.jpg';
+              const pexelsDest = path.join(sceneDir, `broll${ext}`);
+              console.log(`Downloading Pexels asset: ${mediaUrl} -> ${pexelsDest}`);
+              await downloadFile(mediaUrl, pexelsDest);
+              localMediaUrl = `file:///${pexelsDest.replace(/\\/g, '/')}`;
+            } catch (dlErr) {
+              console.error(`Failed to download Pexels media. Falling back to slide...`, dlErr.message);
+            }
           }
         }
 
