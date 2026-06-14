@@ -31,18 +31,27 @@ function getGeminiModel() {
   });
 }
 
-// Helper to retry Gemini calls on 429 Rate Limits
+// Helper to retry Gemini calls on 429 Rate Limits and 5xx Server Errors
 async function generateContentWithRetry(model, prompt, retries = 5, delay = 10000) {
   for (let i = 0; i < retries; i++) {
     try {
       return await model.generateContent(prompt);
     } catch (error) {
-      const is429 = error.status === 429 || 
-                    (error.message && error.message.includes('429')) || 
-                    (error.message && error.message.includes('Quota exceeded'));
-      if (is429 && i < retries - 1) {
+      const status = error.status;
+      const isRetryable = status === 429 || status === 500 || status === 503 || status === 504 ||
+                          (error.message && (
+                            error.message.includes('429') ||
+                            error.message.includes('500') ||
+                            error.message.includes('503') ||
+                            error.message.includes('504') ||
+                            error.message.includes('Quota exceeded') ||
+                            error.message.includes('Service Unavailable') ||
+                            error.message.includes('high demand') ||
+                            error.message.includes('temporary')
+                          ));
+      if (isRetryable && i < retries - 1) {
         const waitTime = delay * Math.pow(2, i);
-        console.warn(`[Rate Limit] Gemini returned 429. Retrying in ${(waitTime/1000).toFixed(0)}s... (Attempt ${i + 1}/${retries})`);
+        console.warn(`[Gemini Error] API failed with status ${status || 'unknown'}. Retrying in ${(waitTime/1000).toFixed(0)}s... (Attempt ${i + 1}/${retries})`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       } else {
         throw error;
