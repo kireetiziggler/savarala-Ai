@@ -79,9 +79,9 @@ STORYBOARD & SCENE GUIDELINES:
   *   For Shorts: The storyboard must contain EXACTLY 6 to 9 scenes. To keep retention high, NO SCENE OR VISUAL STATE CAN EXCEED 4 SECONDS (aim for 2-3 seconds per scene). Each scene narration text must be a complete sentence of 12-18 words.
   *   For Long-form: The storyboard must contain 25 to 40 scenes. Each scene visual state and narration should last between 8 and 18 seconds (typically 25 to 55 words per scene) so viewers have ample time to read the slides or code blocks.
 - For each scene, define the spoken text and specify the visual layout:
-  *   **code**: Show a mock code editor (VS Code) with syntax highlighting.
-  *   **slide**: A clean, modern slide card deck with a title and 1-2 bullet points.
-  *   **stock_media**: Stock B-roll video. Define a highly relevant, concrete, and visually descriptive search keyword (1-3 words) for Pexels. Avoid generic words like "technology", "development", "programming", "testing". Instead, use highly specific visual terms like "cybersecurity hacker matrix", "robot hand typing", "server rack blinking", "iphone scrolling app", "brain glowing digital", "hud interface screen", "close up coding hands".
+  *   **code**: Show a mock code editor (VS Code) with syntax highlighting. Use this for at least 50% of the scenes to show concrete code examples.
+  *   **slide**: A clean, modern slide card deck with a title and 1-2 bullet points. Use this for 30-40% of scenes to explain technical concepts.
+  *   **stock_media**: Stock B-roll video. CRITICAL: Limit this to at most 1 scene in the entire video (e.g. only for the very first hook scene). Never use stock_media for coding or explanation scenes. The video must feel like a premium, professional programming tutorial, not a generic AI-stock-footage video. Define a highly relevant, concrete, and visually descriptive search keyword (1-3 words) for Pexels. Avoid generic words like "technology", "development", "programming", "testing". Instead, use highly specific visual terms like "cybersecurity hacker matrix", "robot hand typing", "server rack blinking", "iphone scrolling app", "brain glowing digital", "hud interface screen", "close up coding hands".
 - In each scene, specify an estimate of the duration (in seconds) that it would take a narrator to read that scene's narration text.
 - Every scene MUST specify an editing zoom effect:
   *   **zoomState**: 'normal' | 'zoom_in_center' | 'zoom_in_left' | 'zoom_in_right' | 'pan_left' | 'pan_right'

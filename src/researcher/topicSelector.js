@@ -5,10 +5,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const PRIORITIZED_CATEGORIES = [
+  'AI News and Tool Releases',
   'AI Tools for Developers',
+  'New Tech Frameworks',
   'Web Development Tutorials',
   'Frontend Coding Hacks',
-  'New Tech Frameworks',
   'ChatGPT and LLM Integrations',
   'Developer Productivity Tools',
   'Playwright and Selenium Automation',
@@ -102,15 +103,16 @@ ${trendSummary}
 
 INSTRUCTIONS:
 1. Analyze today's trending tech topics, Reddit discussions, and popular GitHub repos.
-2. Focus heavily on identifying **real-world problems, troubleshooting issues, performance bottlenecks, or common frustrations** that developers and tech users are actively facing in their daily work (e.g., debugging flaky Playwright tests, solving CSS layout quirks, resolving complex Git merge conflicts, optimizing slow Docker builds, fixing Next.js hydration issues, or mastering AI developer tool integrations).
-3. The selected topic must offer a **clear, actionable, and extremely practical step-by-step solution** to solve one of these specific, painful problems. The video must feel immediately useful, helping the viewer solve their problem and save time.
-4. Select a topic that matches one of our Prioritized Categories (preferred) OR fits perfectly within our Web Development, AI Tools, New Technologies, and QA Automation niches.
-5. CRITICAL: Rotate content niches daily. Do NOT generate consecutive videos on the same sub-topic or niche (e.g. if the last video was about AI testing, pick a Web Development, Frontend Coding, or New Tech Framework topic).
-6. QA/Testing topics (like Playwright, Selenium, Test automation) must be covered AT MOST once or twice a week. If the last 2-3 videos in the RECENTLY GENERATED VIDEOS list are QA-related, you MUST select Web Development, AI Tools for Developers, or New Tech Frameworks.
-7. Prioritize high-value coding tutorials, frontend/backend developer hacks, new tech framework announcements (like Next.js, Bun, Tailwind, Vite), or AI developer tool walkthroughs.
-8. Keep the target audience in mind: Software Developers, QA Engineers, and Automation Specialists.
-9. Recommend THREE (3) ranked topic options in order of strength so we can avoid duplication.
-10. Each option must be a concrete, specific concept, NOT a broad category. (For example, instead of just "Playwright", propose "How to resolve flaky tests using Playwright's auto-wait and tracing configurations").
+2. For AI News and Tool Releases, focus on newly announced AI tools, models, libraries, or developer tools (e.g., new releases from Claude, Gemini, GPT, Cursor, local LLM advancements, or open-source AI projects). Explain what the tool is, why it matters, and how developers can use it.
+3. For coding tutorials, focus heavily on identifying **real-world problems, troubleshooting issues, performance bottlenecks, or common frustrations** that developers and tech users are actively facing in their daily work (e.g., debugging flaky Playwright tests, solving CSS layout quirks, resolving complex Git merge conflicts, optimizing slow Docker builds, fixing Next.js hydration issues, or mastering AI developer tool integrations).
+4. The selected topic must offer a **clear, actionable, and extremely practical step-by-step solution** (or clear walk-through of the news/features) so the video feels immediately useful.
+5. Select a topic that matches one of our Prioritized Categories (preferred) OR fits perfectly within our Web Development, AI Tools, New Technologies, and QA Automation niches.
+6. CRITICAL: Rotate content niches daily. Do NOT generate consecutive videos on the same sub-topic or niche (e.g. if the last video was about AI testing, pick a Web Development, Frontend Coding, or AI News topic).
+7. AI News and new tool releases should be covered regularly (2-3 times a week, especially when new tools are trending). QA/Testing topics (like Playwright, Selenium, Test automation) must be covered AT MOST once or twice a week.
+8. Prioritize high-value coding tutorials, frontend/backend developer hacks, new tech framework announcements (like Next.js, Bun, Tailwind, Vite), or AI developer tool walkthroughs.
+9. Keep the target audience in mind: Software Developers, QA Engineers, and Automation Specialists.
+10. Recommend THREE (3) ranked topic options in order of strength so we can avoid duplication.
+11. Each option must be a concrete, specific concept, NOT a broad category. (For example, instead of just "Playwright", propose "How to resolve flaky tests using Playwright's auto-wait and tracing configurations").
 
 You MUST respond in JSON format. Use the following schema:
 {
