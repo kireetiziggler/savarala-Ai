@@ -2,11 +2,11 @@ name: Daily Autonomous YouTube Channel Growth Agent
 
 on:
   schedule:
-    # 03:30 AM UTC = 09:00 AM IST (Short 1)
+    # 03:30 AM UTC = 09:00 AM IST (Short 1: Single-Scene Tech Meme)
     - cron: '30 3 * * *'
-    # 01:30 PM UTC = 07:00 PM IST (Long Video)
-    - cron: '30 13 * * *'
-    # 02:30 PM UTC = 08:00 PM IST (Short 2)
+    # 08:30 AM UTC = 02:00 PM IST (Short 2: 2-Scene Tech Meme)
+    - cron: '30 8 * * *'
+    # 02:30 PM UTC = 08:00 PM IST (Short 3: Coding Tutorial)
     - cron: '30 14 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
   repository_dispatch:
@@ -49,15 +49,23 @@ jobs:
         run: |
           # Get current UTC hour
           HOUR=$(date -u +%H)
+          # Strip leading zero if present
+          HOUR=$((10#$HOUR))
           echo "Current UTC Hour: $HOUR"
           
           # Decide workflow type based on hour
-          if [ "$HOUR" -eq 13 ]; then
-            echo "Time matches 07:00 PM IST (13:30 UTC). Generating LONG video..."
-            node src/index.js run-workflow long
+          if [ "$HOUR" -eq 3 ]; then
+            echo "Time matches 09:00 AM IST (03:30 UTC). Generating Single-Scene Tech Meme..."
+            node src/index.js run-workflow short single_scene_tech
+          elif [ "$HOUR" -eq 8 ]; then
+            echo "Time matches 02:00 PM IST (08:30 UTC). Generating 2-Scene Tech Meme..."
+            node src/index.js run-workflow short meme_tech_2scene
+          elif [ "$HOUR" -eq 14 ]; then
+            echo "Time matches 08:00 PM IST (14:30 UTC). Generating Coding Tutorial..."
+            node src/index.js run-workflow short tutorial
           else
-            echo "Time matches Short scheduled slots. Generating SHORT video..."
-            node src/index.js run-workflow short
+            echo "Manual or unexpected trigger. Defaulting to Single-Scene Tech Meme..."
+            node src/index.js run-workflow short single_scene_tech
           fi
 
       - name: Commit and Persist Database State
