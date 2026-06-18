@@ -94,23 +94,15 @@ ${trendData.news.slice(0, 10).map(n => `  * ${n.title}`).join('\n')}
 CRITICAL CORE CONSTRAINT:
 For this video, you MUST select a highly common coding issue, syntax problem, bug, performance bottleneck, or programming puzzle that developers frequently face in their daily work (e.g. JavaScript async/promise errors, React rendering pitfalls, Python performance hacks, Next.js hydration issues, CSS grid/flexbox bugs, or Git merge conflicts). The selected topic MUST offer a clear coding solution that can be shown step-by-step in a code editor. Do NOT pick general AI news, tool releases, or general trends. It MUST be a coding tutorial solving a specific problem.
 `;
-  } else if (subType.startsWith('meme')) {
-    let focusText = "a highly viral, funny, sarcastic, or comic AI meme, joke, or relatable developer struggle regarding AI (e.g. AI drawing hands with 6 fingers, ChatGPT confidently lying, AI proposing insane solutions to simple bugs, or developers writing prompts for 4 hours to save 5 minutes of coding).";
-    if (subType === 'meme_coding') {
-      focusText = "a highly viral, funny, sarcastic, or comic developer/programmer meme, joke, or relatable struggle regarding coding or web development (e.g. CSS layout/alignment bugs, Git merge conflict hell, JavaScript async/await promises, code reviews, or software engineering daily pain).";
-    } else if (subType === 'meme_tools') {
-      focusText = "a highly viral, funny, sarcastic, or comic meme or relatable struggle regarding popular AI tools (e.g. ChatGPT, Claude, Cursor AI editor, Vercel v0, Bolt.new, Devin, Github Copilot). The joke should focus on user experiences, bugs, hallucinations, subscription costs, or comparison between tools (e.g. VS Code vs Cursor).";
-    } else if (subType === 'meme_tech') {
-      focusText = "a highly viral, funny, sarcastic, or comic meme or relatable struggle regarding new AI technology, AI agents, automation, office workers using AI, startup founders automating their work, or students using ChatGPT/Claude to write code/essays. Focus on the hype, agent loops costing massive bills, or comedic tech situations.";
-    }
+  } else if (subType === 'single_scene_tech') {
     subTypeInstructions = `
 CRITICAL CORE CONSTRAINT:
-For this video, you MUST select ${focusText} It must be hilarious, sarcastic, and highly clickbait friendly to get millions of views.
+For this video, you MUST select a highly viral, funny, sarcastic, or informative technology fact, quirk, news, or relatable developer situation regarding any technology, programming language, hardware, space, Linux system, or web platform (e.g. JavaScript comparison quirks, Git commands, Docker hacks, database bugs, tech company news). It must fit a single-scene storyboard. It must be hilarious, sarcastic, and highly clickbait friendly to get millions of views.
 `;
-  } else if (subType === 'tool') {
+  } else if (subType === 'meme_tech_2scene') {
     subTypeInstructions = `
 CRITICAL CORE CONSTRAINT:
-For this video, you MUST select a newly released, viral, or trending emerging AI tool or technology (e.g. Cursor AI, v0 by Vercel, Bolt.new, Claude 3.5 Sonnet, Devin, Midjourney, etc.). You must explain what it is, its key features, its price, its pros and cons, and its website URL.
+For this video, you MUST select a highly viral, funny, sarcastic, or comic Expectation vs Reality meme, joke, or relatable developer struggle regarding any technology, coding language, framework, database, or software engineering process (e.g. CSS layout centering, deploying to production on a Friday, merge conflicts, code reviews, docker cache, legacy code). It must focus on general tech (not just AI) and have a clean 2-scene progression. It must be hilarious, sarcastic, and highly clickbait friendly.
 `;
   }
 
@@ -286,57 +278,23 @@ function getFallbackCategoryTopic(videoType, subType = '') {
     };
   }
 
-  if (subType.startsWith('meme')) {
-    console.log(`[Topic Selector] Applying meme fallback topic list for ${subType}...`);
-    let fallbackList = MEME_FALLBACKS;
-    if (subType === 'meme_coding') {
-      fallbackList = [
-        {
-          topic: "AI replacing developers but failing to center a simple CSS div layout",
-          category: "Web Development",
-          suggestedTitle: "AI will replace us... until it tries CSS! 💀",
-          rationale: "Relatable developer pain about centering a div"
-        },
-        {
-          topic: "Software engineers debugging Git merge conflicts in production",
-          category: "Web Development",
-          suggestedTitle: "When Git Merge Conflict Hits Production! 😭",
-          rationale: "Git issues are universal developer nightmares"
-        }
-      ];
-    } else if (subType === 'meme_tools') {
-      fallbackList = [
-        {
-          topic: "Writing AI prompts for 4 hours to avoid 5 minutes of actual coding in Cursor AI",
-          category: "AI Tools for Developers",
-          suggestedTitle: "4 Hours Prompting to Save 5 Mins Coding! 🤡",
-          rationale: "Relatable developer experience with code editors"
-        },
-        {
-          topic: "Claude apologizing profusely for writing incorrect components",
-          category: "AI Tools for Developers",
-          suggestedTitle: "Claude: 'I apologize, let me write it wrong again' 🤥",
-          rationale: "Claude's constant apologizing and loop behavior"
-        }
-      ];
-    } else if (subType === 'meme_tech') {
-      fallbackList = [
-        {
-          topic: "An AI Agent spending $500 on API calls to write a script that scrapes Twitter",
-          category: "New Tech and Trends",
-          suggestedTitle: "AI Agent spent $500 to write 5 lines of code! 💸",
-          rationale: "AI agent loops costing massive API bills"
-        },
-        {
-          topic: "Office workers using ChatGPT to write essays and pretending they worked all day",
-          category: "AI News and Tool Releases",
-          suggestedTitle: "Office Worker AI Hack! 🤫",
-          rationale: "People pretending to work while AI does it"
-        }
-      ];
-    }
-
-    for (const fallback of fallbackList) {
+  if (subType === 'single_scene_tech') {
+    console.log('[Topic Selector] Applying single-scene tech fallback...');
+    const fallbacks = [
+      {
+        topic: "JavaScript comparison array quirks like empty array equals not empty array",
+        category: "Web Development Tutorials",
+        suggestedTitle: "JavaScript is completely wild! Explain this 🤡",
+        rationale: "Classic JS comparison quirk popular on socials"
+      },
+      {
+        topic: "How exit command in vim editor confuses junior developers",
+        category: "Frontend Coding Hacks",
+        suggestedTitle: "How to exit Vim: The developer struggle! 💀",
+        rationale: "Universal developer meme about exiting Vim"
+      }
+    ];
+    for (const fallback of fallbacks) {
       if (!db.hasTopicInLast7Days(fallback.topic)) {
         return {
           topic: fallback.topic,
@@ -348,11 +306,47 @@ function getFallbackCategoryTopic(videoType, subType = '') {
       }
     }
     return {
-      topic: fallbackList[0].topic,
-      category: fallbackList[0].category,
+      topic: fallbacks[0].topic,
+      category: fallbacks[0].category,
       type: videoType,
-      suggestedTitle: fallbackList[0].suggestedTitle,
-      rationale: fallbackList[0].rationale
+      suggestedTitle: fallbacks[0].suggestedTitle,
+      rationale: fallbacks[0].rationale
+    };
+  }
+
+  if (subType === 'meme_tech_2scene') {
+    console.log('[Topic Selector] Applying 2-scene tech meme fallback...');
+    const fallbacks = [
+      {
+        topic: "Centering a simple CSS div layout under pressure",
+        category: "Web Development Tutorials",
+        suggestedTitle: "AI will replace us... until it tries CSS! 💀",
+        rationale: "CSS div alignment struggle"
+      },
+      {
+        topic: "Deploying to production server at 4:59 PM on a Friday afternoon",
+        category: "Web Development Tutorials",
+        suggestedTitle: "Never deploy to production on a Friday! 😭",
+        rationale: "Friday deploy server crash"
+      }
+    ];
+    for (const fallback of fallbacks) {
+      if (!db.hasTopicInLast7Days(fallback.topic)) {
+        return {
+          topic: fallback.topic,
+          category: fallback.category,
+          type: videoType,
+          suggestedTitle: fallback.suggestedTitle,
+          rationale: fallback.rationale
+        };
+      }
+    }
+    return {
+      topic: fallbacks[0].topic,
+      category: fallbacks[0].category,
+      type: videoType,
+      suggestedTitle: fallbacks[0].suggestedTitle,
+      rationale: fallbacks[0].rationale
     };
   }
 

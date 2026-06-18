@@ -73,8 +73,9 @@ async function generateAIImage(prompt, videoType = 'long', aspect = 'auto') {
       width = 1080;
       height = 1080;
     }
+    const seed = Math.floor(Math.random() * 1000000);
     const cleanPrompt = encodeURIComponent(`${prompt}, professional high-quality 4k 3d digital art, modern software developer tech style, clean design, vibrant color scheme`);
-    const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&private=true`;
+    const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&private=true&seed=${seed}`;
     
     console.log(`[AI Image Generator] Requesting Pollinations.ai for: "${prompt}" (${width}x${height})...`);
     const response = await axios({
@@ -90,18 +91,36 @@ async function generateAIImage(prompt, videoType = 'long', aspect = 'auto') {
   }
 }
 
+const BACKGROUND_TRACKS = [
+  { name: 'ncs_alan_walker_fade.mp3', url: 'https://archive.org/download/soundcloud-177671751/Alan_Walker_-_Fade_NCS_Release-177671751.mp3' },
+  { name: 'ncs_tobu_hope.mp3', url: 'https://archive.org/download/TobuHopeNCSRelease/Tobu%20-%20Hope%20%5BNCS%20Release%5D.mp3' }
+];
+
 // Ensure non-copyrighted background music is cached and return its path
-async function ensureBackgroundMusic() {
-  const cachedMusicPath = path.join(process.cwd(), 'scratch', 'background_music.mp3');
+async function ensureBackgroundMusic(videoTitle = '') {
+  let trackIdx = Math.floor(Math.random() * BACKGROUND_TRACKS.length);
+  if (videoTitle) {
+    let hash = 0;
+    for (let i = 0; i < videoTitle.length; i++) {
+      hash = videoTitle.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    trackIdx = Math.abs(hash) % BACKGROUND_TRACKS.length;
+  }
+  
+  const selectedTrack = BACKGROUND_TRACKS[trackIdx];
+  const cachedMusicPath = path.join(process.cwd(), 'scratch', selectedTrack.name);
+  
   if (!fs.existsSync(cachedMusicPath)) {
-    console.log('[Video Renderer] Downloading non-copyrighted background music...');
-    const musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3';
+    console.log(`[Video Renderer] Downloading non-copyrighted background music track: ${selectedTrack.name}...`);
     try {
-      await downloadFile(musicUrl, cachedMusicPath);
-      console.log('[Video Renderer] Background music downloaded successfully.');
+      await downloadFile(selectedTrack.url, cachedMusicPath);
+      console.log(`[Video Renderer] Background music track ${selectedTrack.name} downloaded successfully.`);
     } catch (err) {
-      console.error('[Video Renderer Error] Failed to download background music:', err.message);
-      // Create a silent 60-second fallback music track
+      console.error(`[Video Renderer Error] Failed to download background music track ${selectedTrack.name}:`, err.message);
+      const fallbackPath = path.join(process.cwd(), 'scratch', BACKGROUND_TRACKS[0].name);
+      if (fs.existsSync(fallbackPath)) {
+        return fallbackPath;
+      }
       const cmd = `"${ffmpegPath}" -y -f lavfi -i anullsrc=r=24000:cl=mono -t 60 -c:a libmp3lame "${cachedMusicPath}"`;
       await new Promise((resolve) => exec(cmd, () => resolve()));
     }
@@ -254,8 +273,8 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
 
     console.log(`Pre-generation complete. Raw total video duration: ${totalDuration.toFixed(2)}s`);
 
-    // Scale audio speed if necessary (for shorts, keep strictly between 45 and 58 seconds)
-    if (videoType === 'short') {
+    // Scale audio speed if necessary (for shorts, keep strictly between 45 and 58 seconds, only for voiced videos)
+    if (videoType === 'short' && !scriptPackage.voiceoverDisabled) {
       const minDuration = 45;
       const maxDuration = 58;
       const targetDuration = 52;
@@ -372,8 +391,8 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
           }
         }
 
-        // Fallback to slide if download fails or key is missing
-        if (!localMediaUrl) {
+        // Fallback to slide if download fails or key is missing (only for non-comic types)
+        if (!localMediaUrl && scene.visualType !== 'comic') {
           scene.visualType = 'slide';
           scene.visualParams = {
             title: scene.visualParams.overlayText || keyword,
@@ -487,7 +506,7 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
       await concatenateVideos(listFilePath, silentConcatPath);
       
       console.log('[Video Renderer] Mixing background music into silent video...');
-      const musicPath = await ensureBackgroundMusic();
+      const musicPath = await ensureBackgroundMusic(scriptPackage.title);
       const mixCmd = `"${ffmpegPath}" -y -i "${silentConcatPath}" -i "${musicPath}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "${outputFilePath}"`;
       await new Promise((resolve, reject) => {
         exec(mixCmd, (mixErr, stdout, stderr) => {

@@ -132,18 +132,18 @@
     }
 
     /* 2.5. Comic / Instagram Post Layout */
-    /* 2.5. Comic / Instagram Post Layout */
+    /* 2.5. Comic / Meme Post Layout */
     .comic-layout {
       width: 100%;
       height: 100%;
       background: radial-gradient(circle at center, #111424 0%, #05060b 100%);
       display: flex;
       flex-direction: column;
-      justify-content: center; /* Center all elements vertically in the middle of the screen */
+      justify-content: flex-start; /* Group elements from the top */
       align-items: center;
       position: relative;
       overflow: hidden;
-      padding: 60px 45px;
+      padding: 330px 45px 60px 45px; /* Shifted down to keep text and image in the perfect center */
       box-sizing: border-box;
     }
 
@@ -171,20 +171,37 @@
       z-index: 1;
     }
 
-    .meme-setup {
+    .meme-text-card {
+      width: 95%;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      border: 3px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 30px 35px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      z-index: 5;
+      text-align: center;
+      animation: slideDownFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .meme-text-content {
       font-family: 'Outfit', sans-serif;
-      font-size: 52px;
+      font-size: 44px;
       font-weight: 900;
       color: #ffffff;
-      text-align: center;
+      line-height: 1.3;
       text-transform: uppercase;
-      letter-spacing: -1.5px;
-      line-height: 1.2;
-      z-index: 5;
-      max-width: 95%;
-      margin: 0 auto 30px auto; /* Margin bottom puts spacing directly between text and image */
-      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
-      animation: slideDownFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+      letter-spacing: -1px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .meme-text-content .highlight-cyan {
+      color: #22d3ee; /* Expectation highlight */
+    }
+
+    .meme-text-content .highlight-yellow {
+      color: #fbbf24; /* Reality highlight */
     }
 
     .meme-image-container {
@@ -223,22 +240,6 @@
       color: rgba(255, 255, 255, 0.9);
       letter-spacing: 0.5px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .meme-punchline {
-      font-family: 'Outfit', sans-serif;
-      font-size: 50px;
-      font-weight: 900;
-      color: #fbbf24; /* High impact gold/yellow */
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: -1px;
-      line-height: 1.2;
-      z-index: 5;
-      max-width: 95%;
-      margin: 30px auto 0 auto; /* Margin top puts spacing directly between image and text */
-      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
-      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
     }
 
     @keyframes slideDownFade {
@@ -498,6 +499,27 @@
       height: 26px;
     }
 
+    .comic-tool-logo {
+      position: absolute;
+      top: 30px;
+      left: 6%;
+      width: 70px;
+      height: 70px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    .comic-tool-logo svg {
+      width: 45px;
+      height: 45px;
+    }
+
     /* Top Video Progress Bar */
     .progress-bar {
       position: absolute;
@@ -609,17 +631,17 @@
       <!-- Comic Panel (Social Media Meme Layout) -->
       <div id="comic-panel" class="view-panel">
         <div class="comic-layout">
-          <!-- Setup Text -->
-          <h2 id="comic-setup" class="meme-setup">SETUP TEXT</h2>
+          <!-- Combined Meme Text Card (Top) -->
+          <div class="meme-text-card">
+            <p id="comic-meme-text" class="meme-text-content">MEME TEXT CONTENT</p>
+          </div>
           
           <!-- Center Image Container -->
           <div class="meme-image-container">
+            <div id="comic-tool-logo" class="comic-tool-logo"></div>
             <img id="comic-image" class="meme-image" src="" />
             <div class="meme-watermark">@uniquedeveloper24</div>
           </div>
-          
-          <!-- Punchline Text -->
-          <p id="comic-punchline" class="meme-punchline">PUNCHLINE TEXT</p>
         </div>
       </div>
     </div>
@@ -842,12 +864,25 @@
       } else if (state.visualType === 'comic') {
         document.getElementById('comic-panel').classList.add('active');
         
-        const setupEl = document.getElementById('comic-setup');
-        const punchlineEl = document.getElementById('comic-punchline');
+        const textEl = document.getElementById('comic-meme-text');
         const imgEl = document.getElementById('comic-image');
 
-        setupEl.innerText = state.visualParams.setup || state.visualParams.title || '';
-        punchlineEl.innerText = state.visualParams.punchline || state.visualParams.text || '';
+        let text = state.visualParams.setup || state.visualParams.title || '';
+        const subText = state.visualParams.punchline || state.visualParams.text || '';
+        if (subText) {
+          text += ' - ' + subText;
+        }
+
+        // Apply dynamic highlights for Expectation vs Reality memes
+        let htmlText = text;
+        if (text.toUpperCase().includes('EXPECTATION:')) {
+          htmlText = htmlText.replace(/EXPECTATION:/i, '<span class="highlight-cyan">EXPECTATION:</span>');
+        } 
+        if (text.toUpperCase().includes('REALITY:')) {
+          htmlText = htmlText.replace(/REALITY:/i, '<span class="highlight-yellow">REALITY:</span>');
+        }
+        
+        textEl.innerHTML = htmlText;
 
         const mediaUrl = state.visualParams.mediaUrl;
         if (mediaUrl) {
@@ -924,6 +959,10 @@
           <path d="M12 9l10 7-10 7V9z" fill="#2EAD5F"/>
           <path d="M16 19a3 3 0 100-6 3 3 0 000 6z" fill="#42B883"/>
         </svg>`,
+        claude: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#d97756"/>
+          <text x="6" y="22" font-family="'Outfit', sans-serif" font-weight="900" font-size="16" fill="#ffffff">Cl</text>
+        </svg>`,
         selenium: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="32" height="32" rx="8" fill="#00B0F0"/>
           <text x="5" y="23" font-family="'Outfit', sans-serif" font-weight="900" font-size="18" fill="#ffffff">Se</text>
@@ -972,11 +1011,13 @@
 
       const slideLogo = document.getElementById('slide-tool-logo');
       const codeLogo = document.getElementById('code-tool-logo');
+      const comicLogo = document.getElementById('comic-tool-logo');
       
       slideLogo.style.display = 'none';
       codeLogo.style.display = 'none';
+      if (comicLogo) comicLogo.style.display = 'none';
 
-      if (state.visualType === 'slide' || state.visualType === 'code') {
+      if (state.visualType === 'slide' || state.visualType === 'code' || state.visualType === 'comic') {
         let detectedTool = null;
         
         if (state.visualParams && state.visualParams.logo) {
@@ -985,6 +1026,9 @@
           // Auto-detect based on textual content
           const textToScan = (
             (state.visualParams.title || '') + ' ' + 
+            (state.visualParams.setup || '') + ' ' +
+            (state.visualParams.punchline || '') + ' ' +
+            (state.visualParams.text || '') + ' ' +
             (state.visualParams.bullets ? state.visualParams.bullets.join(' ') : '') + ' ' +
             (state.visualParams.language || '') + ' ' +
             (state.visualParams.code || '')
@@ -994,6 +1038,7 @@
           else if (textToScan.includes('selenium')) detectedTool = 'selenium';
           else if (textToScan.includes('cypress')) detectedTool = 'cypress';
           else if (textToScan.includes('chatgpt') || textToScan.includes('openai') || textToScan.includes('gpt')) detectedTool = 'chatgpt';
+          else if (textToScan.includes('claude') || textToScan.includes('anthropic')) detectedTool = 'claude';
           else if (textToScan.includes('vscode') || textToScan.includes('vs code') || textToScan.includes('editor')) detectedTool = 'vscode';
           else if (textToScan.includes('javascript') || textToScan.includes('js')) detectedTool = 'javascript';
           else if (textToScan.includes('python')) detectedTool = 'python';
@@ -1001,16 +1046,21 @@
           else if (textToScan.includes('cursor')) detectedTool = 'cursor';
           else if (textToScan.includes('v0')) detectedTool = 'v0';
           else if (textToScan.includes('bolt')) detectedTool = 'bolt';
-          else if (textToScan.includes('ai tool') || textToScan.includes('new tech') || textToScan.includes('model') || textToScan.includes('gemini') || textToScan.includes('claude')) detectedTool = 'ai_tool';
+          else if (textToScan.includes('ai tool') || textToScan.includes('new tech') || textToScan.includes('model') || textToScan.includes('gemini')) detectedTool = 'ai_tool';
         }
 
         if (detectedTool && TOOL_LOGOS[detectedTool]) {
           if (state.visualType === 'slide') {
             slideLogo.innerHTML = TOOL_LOGOS[detectedTool];
             slideLogo.style.display = 'flex';
-          } else {
+          } else if (state.visualType === 'code') {
             codeLogo.innerHTML = TOOL_LOGOS[detectedTool];
             codeLogo.style.display = 'flex';
+          } else if (state.visualType === 'comic') {
+            if (comicLogo) {
+              comicLogo.innerHTML = TOOL_LOGOS[detectedTool];
+              comicLogo.style.display = 'flex';
+            }
           }
         }
       }

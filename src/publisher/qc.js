@@ -75,13 +75,13 @@ export async function runQualityControl(videoData, videoPath, thumbnailPath) {
       if (videoData.type === 'short') {
         if (videoData.voiceoverDisabled) {
           if (duration < 9) {
-            errors.push(`Video duration is too short (${duration.toFixed(2)}s) for music-only short. Target is 10-15s.`);
-          } else if (duration > 20) {
-            errors.push(`Video duration is too long (${duration.toFixed(2)}s) for music-only short. Target is 10-15s.`);
+            errors.push(`Video duration is too short (${duration.toFixed(2)}s) for music-only short. Target is 10-22s.`);
+          } else if (duration > 22) {
+            errors.push(`Video duration is too long (${duration.toFixed(2)}s) for music-only short. Target is 10-22s.`);
           }
         } else {
-          if (duration < 40) {
-            errors.push(`Video duration is too short (${duration.toFixed(2)}s). Target is 45-60s.`);
+          if (duration < 15) {
+            errors.push(`Video duration is too short (${duration.toFixed(2)}s) for Short tutorial. Target is 15-60s.`);
           } else if (duration > 60) {
             errors.push(`Video duration is too long (${duration.toFixed(2)}s). YouTube Shorts must be strictly under 60 seconds.`);
           }

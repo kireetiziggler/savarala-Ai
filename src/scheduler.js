@@ -26,9 +26,9 @@ function runWorkflowProcess(type, subType = '') {
   });
 }
 
-// Scheduled job runner with 30-minute retry logic on failure
+// Scheduled job runner with 5-minute retry logic on failure
 async function triggerWorkflowWithRetry(type, subType = '', attempt = 1) {
-  console.log(`[Scheduler] [${new Date().toISOString()}] Triggering scheduled ${type.toUpperCase()} workflow (Sub-type: ${subType || 'none'}) (Attempt ${attempt}/3)...`);
+  console.log(`[Scheduler] [${new Date().toISOString()}] Triggering scheduled ${type.toUpperCase()} workflow (Sub-type: ${subType || 'none'}) (Attempt ${attempt}/5)...`);
   
   db.setLastRun();
 
@@ -38,14 +38,14 @@ async function triggerWorkflowWithRetry(type, subType = '', attempt = 1) {
   } catch (err) {
     console.error(`[Scheduler] Scheduled ${type.toUpperCase()} workflow failed:`, err.message);
     
-    if (attempt < 3) {
-      const retryMinutes = 30;
-      console.log(`[Scheduler] Scheduling retry for ${type.toUpperCase()} in ${retryMinutes} minutes...`);
+    if (attempt < 5) {
+      const retryMinutes = 5;
+      console.log(`[Scheduler] Scheduling retry for ${type.toUpperCase()} in ${retryMinutes} minutes... (Attempt ${attempt + 1}/5)`);
       setTimeout(() => {
         triggerWorkflowWithRetry(type, subType, attempt + 1);
       }, retryMinutes * 60 * 1000);
     } else {
-      console.error(`[Scheduler] All scheduled attempts for ${type.toUpperCase()} failed.`);
+      console.error(`[Scheduler] All 5 scheduled attempts for ${type.toUpperCase()} failed. Giving up for this slot.`);
     }
   }
 }
@@ -53,26 +53,26 @@ async function triggerWorkflowWithRetry(type, subType = '', attempt = 1) {
 console.log('=== YouTube Growth AI Agent Scheduler Started ===');
 console.log(`Current local time: ${new Date().toLocaleString('en-US', { timeZone: TIMEZONE })} (${TIMEZONE})`);
 
-// Short 1: 09:00 AM IST - Web Development & Coding Meme
+// Short 1: 09:00 AM IST - Single-Scene Tech Meme/News
 cron.schedule('0 9 * * *', () => {
-  triggerWorkflowWithRetry('short', 'meme_coding');
+  triggerWorkflowWithRetry('short', 'single_scene_tech');
 }, {
   timezone: TIMEZONE
 });
-console.log(`- Scheduled: Short 1 (Coding Meme) at 09:00 AM IST`);
+console.log(`- Scheduled: Short 1 (Single-Scene Tech Meme) at 09:00 AM IST`);
 
-// Short 2: 02:00 PM IST (14:00) - AI Tools Meme (Cursor, Claude, etc.)
+// Short 2: 02:00 PM IST (14:00) - 2-Scene Expectation vs Reality Tech Meme
 cron.schedule('0 14 * * *', () => {
-  triggerWorkflowWithRetry('short', 'meme_tools');
+  triggerWorkflowWithRetry('short', 'meme_tech_2scene');
 }, {
   timezone: TIMEZONE
 });
-console.log(`- Scheduled: Short 2 (AI Tools Meme) at 02:00 PM IST`);
+console.log(`- Scheduled: Short 2 (2-Scene Tech Meme) at 02:00 PM IST`);
 
-// Short 3: 08:00 PM IST (20:00) - New AI Technology & Automation Meme
+// Short 3: 08:00 PM IST (20:00) - Coding Tutorial (Voiceover & Editor)
 cron.schedule('0 20 * * *', () => {
-  triggerWorkflowWithRetry('short', 'meme_tech');
+  triggerWorkflowWithRetry('short', 'tutorial');
 }, {
   timezone: TIMEZONE
 });
-console.log(`- Scheduled: Short 3 (AI Tech Meme) at 08:00 PM IST`);
+console.log(`- Scheduled: Short 3 (Coding Tutorial) at 08:00 PM IST`);
