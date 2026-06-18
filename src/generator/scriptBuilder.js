@@ -421,7 +421,7 @@ const MOCK_TUTORIAL = {
   storyboard: [
     {
       sceneIndex: 1,
-      narration: "React useEffect loops can crash your browser. Let's fix it in 60 seconds.",
+      narration: "React useEffect loops are one of the most common ways to accidentally crash your browser. Today, we are going to fix it in under sixty seconds. Let's dive in.",
       visualType: "slide",
       zoomState: "normal",
       visualParams: {
@@ -432,7 +432,7 @@ const MOCK_TUTORIAL = {
     },
     {
       sceneIndex: 2,
-      narration: "Here is the buggy code where the data dependency triggers a state set, which re-runs the hook.",
+      narration: "Here is the buggy code. Notice how updating state inside the useEffect Hook updates the data variable, which then triggers the dependency array, making the Hook run all over again in an infinite loop.",
       visualType: "code",
       zoomState: "normal",
       visualParams: {
@@ -444,7 +444,7 @@ const MOCK_TUTORIAL = {
     },
     {
       sceneIndex: 3,
-      narration: "To fix it, remove data from the dependencies array, or check if data is already fetched.",
+      narration: "To fix this, we can pass an empty dependencies array to run the effect only on mount, or we can add a simple condition to verify if the data has already been fetched before updating state.",
       visualType: "slide",
       zoomState: "normal",
       visualParams: {
@@ -452,6 +452,17 @@ const MOCK_TUTORIAL = {
         bullets: ["Pass an empty dependency array for mount-only", "Or only call set data if it changed."]
       },
       duration: 15
+    },
+    {
+      sceneIndex: 4,
+      narration: "Now our component renders cleanly, only loading data once without crashing the app. Share this with a developer who needs it, and subscribe for more clean code tutorials!",
+      visualType: "slide",
+      zoomState: "normal",
+      visualParams: {
+        title: "Clean Code",
+        bullets: ["No more infinite loops or memory leaks", "Subscribe for daily programming tips!"]
+      },
+      duration: 10
     }
   ]
 };
