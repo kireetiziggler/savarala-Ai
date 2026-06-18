@@ -73,10 +73,18 @@ export async function runQualityControl(videoData, videoPath, thumbnailPath) {
       const duration = await getAudioDuration(videoPath);
       console.log(`QC Check: Video duration is ${duration.toFixed(2)}s`);
       if (videoData.type === 'short') {
-        if (duration < 40) {
-          errors.push(`Video duration is too short (${duration.toFixed(2)}s). Target is 45-60s.`);
-        } else if (duration > 60) {
-          errors.push(`Video duration is too long (${duration.toFixed(2)}s). YouTube Shorts must be strictly under 60 seconds.`);
+        if (videoData.voiceoverDisabled) {
+          if (duration < 9) {
+            errors.push(`Video duration is too short (${duration.toFixed(2)}s) for music-only short. Target is 10-15s.`);
+          } else if (duration > 20) {
+            errors.push(`Video duration is too long (${duration.toFixed(2)}s) for music-only short. Target is 10-15s.`);
+          }
+        } else {
+          if (duration < 40) {
+            errors.push(`Video duration is too short (${duration.toFixed(2)}s). Target is 45-60s.`);
+          } else if (duration > 60) {
+            errors.push(`Video duration is too long (${duration.toFixed(2)}s). YouTube Shorts must be strictly under 60 seconds.`);
+          }
         }
       } else {
         if (duration < 300) {

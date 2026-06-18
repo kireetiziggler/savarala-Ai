@@ -65,42 +65,48 @@ async function fetchStockMedia(keyword, isVideo = true, videoType = 'long') {
 }
 
 // Generate custom AI images using Hugging Face's serverless Inference API (completely free with a HF token)
-async function generateHFImage(prompt, videoType = 'long') {
-  const token = process.env.HF_TOKEN;
-  if (!token) {
-    console.log('[AI Image Generator] HF_TOKEN is not configured. Skipping Hugging Face generation.');
-    return null;
-  }
-
+async function generateAIImage(prompt, videoType = 'long', aspect = 'auto') {
   try {
-    const width = videoType === 'short' ? 1080 : 1920;
-    const height = videoType === 'short' ? 1920 : 1080;
-    const model = 'black-forest-labs/FLUX.1-schnell';
-    const url = `https://api-inference.huggingface.co/models/${model}`;
+    let width = videoType === 'short' ? 1080 : 1920;
+    let height = videoType === 'short' ? 1920 : 1080;
+    if (aspect === 'square') {
+      width = 1080;
+      height = 1080;
+    }
+    const cleanPrompt = encodeURIComponent(`${prompt}, professional high-quality 4k 3d digital art, modern software developer tech style, clean design, vibrant color scheme`);
+    const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&private=true`;
     
-    console.log(`[AI Image Generator] Requesting Hugging Face Flux model for: "${prompt}"...`);
+    console.log(`[AI Image Generator] Requesting Pollinations.ai for: "${prompt}" (${width}x${height})...`);
     const response = await axios({
-      method: 'post',
+      method: 'get',
       url: url,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      data: JSON.stringify({
-        inputs: `${prompt}, professional high-quality 4k 3d digital art, modern software developer tech style, clean design, vibrant color scheme`,
-        parameters: {
-          width: width,
-          height: height
-        }
-      }),
       responseType: 'arraybuffer'
     });
 
     return Buffer.from(response.data);
   } catch (error) {
-    console.error('Hugging Face AI image generation failed:', error.message);
+    console.error('[AI Image Generator Error] Pollinations.ai image generation failed:', error.message);
     return null;
   }
+}
+
+// Ensure non-copyrighted background music is cached and return its path
+async function ensureBackgroundMusic() {
+  const cachedMusicPath = path.join(process.cwd(), 'scratch', 'background_music.mp3');
+  if (!fs.existsSync(cachedMusicPath)) {
+    console.log('[Video Renderer] Downloading non-copyrighted background music...');
+    const musicUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3';
+    try {
+      await downloadFile(musicUrl, cachedMusicPath);
+      console.log('[Video Renderer] Background music downloaded successfully.');
+    } catch (err) {
+      console.error('[Video Renderer Error] Failed to download background music:', err.message);
+      // Create a silent 60-second fallback music track
+      const cmd = `"${ffmpegPath}" -y -f lavfi -i anullsrc=r=24000:cl=mono -t 60 -c:a libmp3lame "${cachedMusicPath}"`;
+      await new Promise((resolve) => exec(cmd, () => resolve()));
+    }
+  }
+  return cachedMusicPath;
 }
 
 // Compile frame speed scale using FFmpeg atempo filter
@@ -177,22 +183,62 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
     // Phase 1: Pre-generate all voiceovers to determine exact total duration
     console.log('Phase 1: Pre-generating voiceover audio files...');
     let totalDuration = 0;
-
     for (let i = 0; i < scriptPackage.storyboard.length; i++) {
       const scene = scriptPackage.storyboard[i];
-      const sceneIdx = i + 1;
+      const sceneIdx = scene.sceneIndex;
       const sceneDir = path.join(tempDir, `scene_${sceneIdx}`);
       fs.mkdirSync(sceneDir, { recursive: true });
 
       const rawAudioPath = path.join(sceneDir, 'audio_raw.mp3');
       const rawJsonPath = path.join(sceneDir, 'audio_raw.json');
-      const voiceover = await generateVoiceover(scene.narration, rawAudioPath, rawJsonPath);
       
-      const sceneDuration = Math.max(1.0, voiceover.duration);
-      if (voiceover.duration === 0) {
-        console.warn(`[Video Renderer Warning] Scene ${sceneIdx} voiceover has 0.00s duration. Forcing 1.0s duration to prevent FFmpeg crashes.`);
+      let voiceover;
+      if (scriptPackage.voiceoverDisabled) {
+        const duration = scene.duration || 5;
+        console.log(`[Video Renderer] Voiceover disabled. Generating silent scene audio (${duration}s)...`);
+        const silentCmd = `"${ffmpegPath}" -y -f lavfi -i anullsrc=r=24000:cl=mono -t ${duration} -c:a libmp3lame "${rawAudioPath}"`;
+        await new Promise((resolve, reject) => {
+          exec(silentCmd, (silentErr) => {
+            if (silentErr) reject(silentErr);
+            else resolve();
+          });
+        });
+        
+        // Generate mock word timings
+        const words = scene.narration.trim().split(/\s+/);
+        const wordDuration = duration / Math.max(1, words.length);
+        const timings = words.map((w, idx) => ({
+          word: w,
+          start: idx * wordDuration,
+          end: (idx + 1) * wordDuration
+        }));
+        
+        fs.writeFileSync(rawJsonPath, JSON.stringify(timings, null, 2), 'utf-8');
+        voiceover = {
+          filePath: rawAudioPath,
+          duration,
+          words: timings
+        };
+      } else {
+        voiceover = await generateVoiceover(scene.narration, rawAudioPath, rawJsonPath);
+
+        if (voiceover.duration === 0) {
+          console.warn(`[Video Renderer Warning] Audio duration for scene ${sceneIdx} is 0. Using silent audio fallback (1s).`);
+          try {
+            const silentCmd = `"${ffmpegPath}" -y -f lavfi -i anullsrc=r=24000:cl=mono -t 1.0 -c:a libmp3lame "${rawAudioPath}"`;
+            await new Promise((resolve, reject) => {
+              exec(silentCmd, (silentErr) => {
+                if (silentErr) reject(silentErr);
+                else resolve();
+              });
+            });
+          } catch (silentErr) {
+            console.error(`[Video Renderer Error] Failed to generate silent audio fallback:`, silentErr.message);
+          }
+        }
       }
 
+      const sceneDuration = Math.max(1.0, voiceover.duration);
       scenesMetadata.push({
         index: sceneIdx,
         rawAudioPath,
@@ -281,23 +327,22 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
 
       // 1. Manage Stock B-roll Assets if needed
       let localMediaUrl = null;
-      if (scene.visualType === 'stock_media') {
+      if (scene.visualType === 'stock_media' || scene.visualType === 'comic') {
         const keyword = scene.visualParams.keyword || 'technology';
         const mediaDest = path.join(sceneDir, `broll.jpg`);
 
-        // Try generating with Hugging Face first
-        if (process.env.HF_TOKEN) {
-          console.log(`Generating AI Visual via Hugging Face for: "${keyword}"...`);
-          const imgBuffer = await generateHFImage(keyword, videoType);
-          if (imgBuffer) {
-            fs.writeFileSync(mediaDest, imgBuffer);
-            localMediaUrl = `file:///${mediaDest.replace(/\\/g, '/')}`;
-          }
+        // Try generating with Pollinations.ai first
+        console.log(`Generating AI Visual via Pollinations.ai for: "${keyword}"...`);
+        const aspect = scene.visualType === 'comic' ? 'square' : 'auto';
+        const imgBuffer = await generateAIImage(keyword, videoType, aspect);
+        if (imgBuffer) {
+          fs.writeFileSync(mediaDest, imgBuffer);
+          localMediaUrl = `file:///${mediaDest.replace(/\\/g, '/')}`;
         }
 
         // Fallback to LoremFlickr (completely free and keyless stock photo matcher)
         if (!localMediaUrl) {
-          console.log(`Hugging Face generation skipped or failed. Fetching keyless LoremFlickr fallback for: "${keyword}"...`);
+          console.log(`Pollinations.ai generation failed. Fetching keyless LoremFlickr fallback for: "${keyword}"...`);
           const width = videoType === 'short' ? 1080 : 1920;
           const height = videoType === 'short' ? 1920 : 1080;
           const mediaUrl = `https://loremflickr.com/${width}/${height}/${encodeURIComponent(keyword)}`;
@@ -399,7 +444,7 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
           cursor: scene.cursor || null,
           sceneProgress,
           overallProgress,
-          words,
+          words: scriptPackage.voiceoverDisabled ? [] : words,
           activeWordIndex,
           timeSec,
           sceneDuration: duration
@@ -437,7 +482,28 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
       fs.mkdirSync(finalOutDir, { recursive: true });
     }
 
-    await concatenateVideos(listFilePath, outputFilePath);
+    if (scriptPackage.voiceoverDisabled) {
+      const silentConcatPath = path.join(tempDir, 'silent_concat.mp4');
+      await concatenateVideos(listFilePath, silentConcatPath);
+      
+      console.log('[Video Renderer] Mixing background music into silent video...');
+      const musicPath = await ensureBackgroundMusic();
+      const mixCmd = `"${ffmpegPath}" -y -i "${silentConcatPath}" -i "${musicPath}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "${outputFilePath}"`;
+      await new Promise((resolve, reject) => {
+        exec(mixCmd, (mixErr, stdout, stderr) => {
+          if (mixErr) {
+            console.error('[Video Renderer Error] Failed to mix background music:', stderr);
+            fs.copyFileSync(silentConcatPath, outputFilePath);
+            resolve();
+          } else {
+            console.log('[Video Renderer] Mixed music successfully.');
+            resolve();
+          }
+        });
+      });
+    } else {
+      await concatenateVideos(listFilePath, outputFilePath);
+    }
     console.log(`SUCCESS! Professional video compiled at: ${outputFilePath}`);
 
   } catch (err) {

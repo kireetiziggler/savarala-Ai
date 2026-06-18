@@ -62,21 +62,23 @@ async function main() {
 
       case 'run-workflow': {
         const type = args[1] || 'short';
+        const subType = args[2] || '';
         if (type !== 'short' && type !== 'long') {
           console.error('Error: type must be "short" or "long"');
           return;
         }
-        await runWorkflow(type);
+        await runWorkflow(type, subType);
         break;
       }
 
       case 'generate-video': {
         const type = args[1] || 'short';
+        const subType = args[2] || '';
         if (type !== 'short' && type !== 'long') {
           console.error('Error: type must be "short" or "long"');
           return;
         }
-        await runGenerationOnly(type);
+        await runGenerationOnly(type, subType);
         break;
       }
 
@@ -107,14 +109,15 @@ Commands:
   `);
 }
 
-async function runWorkflow(type) {
+async function runWorkflow(type, subType = '') {
   console.log(`\n=================== STARTING ${type.toUpperCase()} WORKFLOW ===================`);
   
   // 1. Scrape Trends
   const trendData = await scrapeDailyTrends();
   
   // 2. Select Topic
-  const topicInfo = await selectDailyTopic(trendData, type);
+  const topicInfo = await selectDailyTopic(trendData, type, subType);
+  topicInfo.subType = subType;
   
   // 3. Generate Script, Storyboard and Metadata
   const scriptPkg = await generateScriptAndMetadata(topicInfo);
@@ -181,14 +184,15 @@ async function runWorkflow(type) {
   }
 }
 
-async function runGenerationOnly(type) {
+async function runGenerationOnly(type, subType = '') {
   console.log(`\n=================== STARTING ${type.toUpperCase()} GENERATION (REVIEW MODE) ===================`);
   
   // 1. Scrape Trends
   const trendData = await scrapeDailyTrends();
   
   // 2. Select Topic
-  const topicInfo = await selectDailyTopic(trendData, type);
+  const topicInfo = await selectDailyTopic(trendData, type, subType);
+  topicInfo.subType = subType;
   
   // 3. Generate Script, Storyboard and Metadata
   const scriptPkg = await generateScriptAndMetadata(topicInfo);

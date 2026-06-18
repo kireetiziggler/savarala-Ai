@@ -115,46 +115,54 @@ async function generateEdgeTTS(processedText, outputPath, locale, jsonOutputPath
       wordBoundaryEnabled: true
     });
     
-    const { audioStream, metadataStream } = await tts.toStream(processedText);
-    
-    const audioWriter = fs.createWriteStream(outputPath);
-    audioStream.pipe(audioWriter);
-    
-    const ttsTimings = [];
-    metadataStream.on('data', (chunk) => {
-      try {
-        const textDecoder = new TextDecoder();
-        const metadataStr = textDecoder.decode(chunk);
-        const parsed = JSON.parse(metadataStr);
-        if (parsed.Metadata && parsed.Metadata[0] && parsed.Metadata[0].Type === 'WordBoundary') {
-          const boundary = parsed.Metadata[0].Data;
-          ttsTimings.push({
-            word: boundary.text.Text,
-            start: boundary.Offset / 10000000,
-            end: (boundary.Offset + boundary.Duration) / 10000000
-          });
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Edge TTS request timed out after 15 seconds')), 15000);
+    });
+
+    const generatePromise = (async () => {
+      const { audioStream, metadataStream } = await tts.toStream(processedText);
+      
+      const audioWriter = fs.createWriteStream(outputPath);
+      audioStream.pipe(audioWriter);
+      
+      const ttsTimings = [];
+      metadataStream.on('data', (chunk) => {
+        try {
+          const textDecoder = new TextDecoder();
+          const metadataStr = textDecoder.decode(chunk);
+          const parsed = JSON.parse(metadataStr);
+          if (parsed.Metadata && parsed.Metadata[0] && parsed.Metadata[0].Type === 'WordBoundary') {
+            const boundary = parsed.Metadata[0].Data;
+            ttsTimings.push({
+              word: boundary.text.Text,
+              start: boundary.Offset / 10000000,
+              end: (boundary.Offset + boundary.Duration) / 10000000
+            });
+          }
+        } catch (err) {
+          // Ignore JSON/parsing warnings
         }
-      } catch (err) {
-        // Ignore JSON/parsing warnings
+      });
+      
+      await new Promise((resolve, reject) => {
+        audioWriter.on('finish', resolve);
+        audioWriter.on('error', reject);
+      });
+      
+      // Align timings back to original script narration
+      if (jsonOutputPath && ttsTimings.length > 0 && originalText) {
+        const originalWords = originalText.trim().split(/\s+/);
+        const alignedTimings = alignTimings(originalWords, ttsTimings);
+        fs.writeFileSync(jsonOutputPath, JSON.stringify(alignedTimings, null, 2), 'utf-8');
+        console.log(`Aligned word boundary timestamps saved at: ${jsonOutputPath}`);
       }
-    });
-    
-    await new Promise((resolve, reject) => {
-      audioWriter.on('finish', resolve);
-      audioWriter.on('error', reject);
-    });
-    
-    // Align timings back to original script narration
-    if (jsonOutputPath && ttsTimings.length > 0 && originalText) {
-      const originalWords = originalText.trim().split(/\s+/);
-      const alignedTimings = alignTimings(originalWords, ttsTimings);
-      fs.writeFileSync(jsonOutputPath, JSON.stringify(alignedTimings, null, 2), 'utf-8');
-      console.log(`Aligned word boundary timestamps saved at: ${jsonOutputPath}`);
-    }
-    
-    console.log(`Edge TTS Voiceover generated at: ${outputPath}`);
+      
+      console.log(`Edge TTS Voiceover generated at: ${outputPath}`);
+    })();
+
+    await Promise.race([generatePromise, timeoutPromise]);
   } catch (error) {
-    console.error('Edge TTS generation failed:', error);
+    console.error('Edge TTS generation failed:', error.message || error);
     throw error;
   }
 }
@@ -199,7 +207,14 @@ async function generateElevenLabsTTS(text, outputPath, voiceId, apiKey) {
 
 // Preprocess text for better pronunciation of technical terms
 function preprocessTextForTTS(text) {
-  return text
+  let cleanText = text
+    .replace(/[`*_\[\]()]/g, '') // strip markdown
+    .replace(/&/g, ' and ')
+    .replace(/</g, '')
+    .replace(/>/g, '')
+    .replace(/_/g, ' '); // replace underscores with spaces (e.g., iter_fields -> iter fields)
+
+  return cleanText
     .replace(/\bAPI\b/g, 'A P I')
     .replace(/\bAPIs\b/g, 'A P I s')
     .replace(/\bUI\b/g, 'U I')

@@ -9,15 +9,16 @@ dotenv.config();
 const TIMEZONE = 'Asia/Kolkata';
 
 // Run workflow in child process for safety
-function runWorkflowProcess(type) {
+function runWorkflowProcess(type, subType = '') {
   return new Promise((resolve, reject) => {
     const scriptPath = path.join(process.cwd(), 'src', 'index.js');
-    console.log(`[Scheduler] Spawning child process: node "${scriptPath}" run-workflow ${type}`);
+    const subTypeArg = subType ? ` ${subType}` : '';
+    console.log(`[Scheduler] Spawning child process: node "${scriptPath}" run-workflow ${type}${subTypeArg}`);
     
-    exec(`node "${scriptPath}" run-workflow ${type}`, (error, stdout, stderr) => {
-      console.log(`=== Child Process Output (${type}) ===\n`, stdout);
+    exec(`node "${scriptPath}" run-workflow ${type}${subTypeArg}`, (error, stdout, stderr) => {
+      console.log(`=== Child Process Output (${type}${subTypeArg}) ===\n`, stdout);
       if (error) {
-        console.error(`=== Child Process Error (${type}) ===\n`, stderr);
+        console.error(`=== Child Process Error (${type}${subTypeArg}) ===\n`, stderr);
         return reject(error);
       }
       resolve();
@@ -26,13 +27,13 @@ function runWorkflowProcess(type) {
 }
 
 // Scheduled job runner with 30-minute retry logic on failure
-async function triggerWorkflowWithRetry(type, attempt = 1) {
-  console.log(`[Scheduler] [${new Date().toISOString()}] Triggering scheduled ${type.toUpperCase()} workflow (Attempt ${attempt}/3)...`);
+async function triggerWorkflowWithRetry(type, subType = '', attempt = 1) {
+  console.log(`[Scheduler] [${new Date().toISOString()}] Triggering scheduled ${type.toUpperCase()} workflow (Sub-type: ${subType || 'none'}) (Attempt ${attempt}/3)...`);
   
   db.setLastRun();
 
   try {
-    await runWorkflowProcess(type);
+    await runWorkflowProcess(type, subType);
     console.log(`[Scheduler] Scheduled ${type.toUpperCase()} workflow completed successfully.`);
   } catch (err) {
     console.error(`[Scheduler] Scheduled ${type.toUpperCase()} workflow failed:`, err.message);
@@ -41,7 +42,7 @@ async function triggerWorkflowWithRetry(type, attempt = 1) {
       const retryMinutes = 30;
       console.log(`[Scheduler] Scheduling retry for ${type.toUpperCase()} in ${retryMinutes} minutes...`);
       setTimeout(() => {
-        triggerWorkflowWithRetry(type, attempt + 1);
+        triggerWorkflowWithRetry(type, subType, attempt + 1);
       }, retryMinutes * 60 * 1000);
     } else {
       console.error(`[Scheduler] All scheduled attempts for ${type.toUpperCase()} failed.`);
@@ -52,26 +53,26 @@ async function triggerWorkflowWithRetry(type, attempt = 1) {
 console.log('=== YouTube Growth AI Agent Scheduler Started ===');
 console.log(`Current local time: ${new Date().toLocaleString('en-US', { timeZone: TIMEZONE })} (${TIMEZONE})`);
 
-// Short 1: 09:00 AM IST
+// Short 1: 09:00 AM IST - Web Development & Coding Meme
 cron.schedule('0 9 * * *', () => {
-  triggerWorkflowWithRetry('short');
+  triggerWorkflowWithRetry('short', 'meme_coding');
 }, {
   timezone: TIMEZONE
 });
-console.log(`- Scheduled: Short 1 at 09:00 AM IST`);
+console.log(`- Scheduled: Short 1 (Coding Meme) at 09:00 AM IST`);
 
-// Short 2: 08:00 PM IST (20:00)
+// Short 2: 02:00 PM IST (14:00) - AI Tools Meme (Cursor, Claude, etc.)
+cron.schedule('0 14 * * *', () => {
+  triggerWorkflowWithRetry('short', 'meme_tools');
+}, {
+  timezone: TIMEZONE
+});
+console.log(`- Scheduled: Short 2 (AI Tools Meme) at 02:00 PM IST`);
+
+// Short 3: 08:00 PM IST (20:00) - New AI Technology & Automation Meme
 cron.schedule('0 20 * * *', () => {
-  triggerWorkflowWithRetry('short');
+  triggerWorkflowWithRetry('short', 'meme_tech');
 }, {
   timezone: TIMEZONE
 });
-console.log(`- Scheduled: Short 2 at 08:00 PM IST`);
-
-// Long Video: 07:00 PM IST (19:00)
-cron.schedule('0 19 * * *', () => {
-  triggerWorkflowWithRetry('long');
-}, {
-  timezone: TIMEZONE
-});
-console.log(`- Scheduled: Long Video at 07:00 PM IST`);
+console.log(`- Scheduled: Short 3 (AI Tech Meme) at 08:00 PM IST`);

@@ -131,6 +131,149 @@
       font-weight: 700;
     }
 
+    /* 2.5. Comic / Instagram Post Layout */
+    /* 2.5. Comic / Instagram Post Layout */
+    .comic-layout {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #111424 0%, #05060b 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* Center all elements vertically in the middle of the screen */
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 60px 45px;
+      box-sizing: border-box;
+    }
+
+    /* Ambient background glows for premium look */
+    .comic-layout::before {
+      content: '';
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+      top: 25%;
+      left: 5%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .comic-layout::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, rgba(236, 72, 153, 0) 70%);
+      bottom: 25%;
+      right: 5%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .meme-setup {
+      font-family: 'Outfit', sans-serif;
+      font-size: 52px;
+      font-weight: 900;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: -1.5px;
+      line-height: 1.2;
+      z-index: 5;
+      max-width: 95%;
+      margin: 0 auto 30px auto; /* Margin bottom puts spacing directly between text and image */
+      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+      animation: slideDownFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .meme-image-container {
+      width: 100%;
+      max-height: 960px; /* Constrain container height to keep layout compact */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 5;
+      margin: 0 auto;
+      animation: scaleUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+
+    .meme-image {
+      max-width: 95%;
+      max-height: 860px; /* Exact limits for the centered square image */
+      object-fit: contain;
+      border-radius: 28px;
+      border: 6px solid #1c1d24;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 50px rgba(99, 102, 241, 0.15);
+    }
+
+    .meme-watermark {
+      position: absolute;
+      bottom: 30px;
+      right: 6%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.9);
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .meme-punchline {
+      font-family: 'Outfit', sans-serif;
+      font-size: 50px;
+      font-weight: 900;
+      color: #fbbf24; /* High impact gold/yellow */
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      line-height: 1.2;
+      z-index: 5;
+      max-width: 95%;
+      margin: 30px auto 0 auto; /* Margin top puts spacing directly between image and text */
+      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+      animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+
+    @keyframes slideDownFade {
+      from {
+        opacity: 0;
+        transform: translateY(-40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleUpFade {
+      from {
+        opacity: 0;
+        transform: scale(0.93);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
     /* 3. Code Editor Layout */
     .code-layout {
       width: 90%;
@@ -429,6 +572,7 @@
           <div id="slide-tool-logo" class="tool-logo-badge"></div>
           <h1 id="slide-title" class="slide-title">Mastering Playwright</h1>
           <ul id="slide-bullets" class="slide-bullets"></ul>
+          <div id="slide-website-link" style="margin-top: 30px; font-size: 28px; font-family: 'Fira Code', monospace; color: #a5b4fc; font-weight: 600; display: none; text-align: left;"></div>
         </div>
       </div>
 
@@ -459,6 +603,23 @@
             <video id="media-video" class="media-element" src="" muted loop style="display:none;"></video>
           </div>
           <div class="media-overlay"></div>
+        </div>
+      </div>
+
+      <!-- Comic Panel (Social Media Meme Layout) -->
+      <div id="comic-panel" class="view-panel">
+        <div class="comic-layout">
+          <!-- Setup Text -->
+          <h2 id="comic-setup" class="meme-setup">SETUP TEXT</h2>
+          
+          <!-- Center Image Container -->
+          <div class="meme-image-container">
+            <img id="comic-image" class="meme-image" src="" />
+            <div class="meme-watermark">@uniquedeveloper24</div>
+          </div>
+          
+          <!-- Punchline Text -->
+          <p id="comic-punchline" class="meme-punchline">PUNCHLINE TEXT</p>
         </div>
       </div>
     </div>
@@ -514,12 +675,20 @@
       }
 
       // 2. Setup Active View
-      const panels = ['slide-panel', 'code-panel', 'media-panel'];
+      const panels = ['slide-panel', 'code-panel', 'media-panel', 'comic-panel'];
       panels.forEach(p => document.getElementById(p).classList.remove('active'));
 
       if (state.visualType === 'slide') {
         document.getElementById('slide-panel').classList.add('active');
         document.getElementById('slide-title').innerText = state.visualParams.title;
+        
+        const websiteLink = document.getElementById('slide-website-link');
+        if (state.visualParams.website) {
+          websiteLink.innerText = state.visualParams.website;
+          websiteLink.style.display = 'block';
+        } else {
+          websiteLink.style.display = 'none';
+        }
         
         const bulletsContainer = document.getElementById('slide-bullets');
         bulletsContainer.innerHTML = '';
@@ -670,6 +839,33 @@
             });
           }
         }
+      } else if (state.visualType === 'comic') {
+        document.getElementById('comic-panel').classList.add('active');
+        
+        const setupEl = document.getElementById('comic-setup');
+        const punchlineEl = document.getElementById('comic-punchline');
+        const imgEl = document.getElementById('comic-image');
+
+        setupEl.innerText = state.visualParams.setup || state.visualParams.title || '';
+        punchlineEl.innerText = state.visualParams.punchline || state.visualParams.text || '';
+
+        const mediaUrl = state.visualParams.mediaUrl;
+        if (mediaUrl) {
+          imgEl.style.display = 'block';
+          if (imgEl.src !== mediaUrl) {
+            imgEl.src = mediaUrl;
+            await new Promise((resolve) => {
+              if (imgEl.complete) {
+                resolve();
+              } else {
+                imgEl.onload = () => resolve();
+                imgEl.onerror = () => resolve();
+              }
+            });
+          }
+        } else {
+          imgEl.style.display = 'none';
+        }
       }
 
       // Hide cursor if not in code editor
@@ -755,6 +951,22 @@
         github: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="32" height="32" rx="8" fill="#181A1B"/>
           <path d="M16 4a12 12 0 00-3.8 23.4c.6.1.8-.3.8-.6v-2.1c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.8-1.3-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.9 1.2 1.9 1.2 1.1 1.9 2.9 1.3 3.6 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.3-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 016 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.7.2 2.9.1 3.2.7.9 1.2 2 1.2 3.3 0 4.7-2.8 5.7-5.5 6 .4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A12 12 0 0016 4z" fill="#ffffff"/>
+        </svg>`,
+        cursor: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#1e1e1e"/>
+          <path d="M10 8l12 6-5 2 5 8-3 1.5-5-8-4 4V8z" fill="#ffffff"/>
+        </svg>`,
+        v0: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#000000"/>
+          <text x="6" y="22" font-family="'Outfit', sans-serif" font-weight="900" font-size="16" fill="#ffffff">v0</text>
+        </svg>`,
+        bolt: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#FBBF24"/>
+          <path d="M18 4L8 16h8l-2 12 10-12h-8l2-12z" fill="#ffffff"/>
+        </svg>`,
+        ai_tool: `<svg class="tool-badge-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="#8B5CF6"/>
+          <path d="M16 6l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z" fill="#ffffff"/>
         </svg>`
       };
 
@@ -786,6 +998,10 @@
           else if (textToScan.includes('javascript') || textToScan.includes('js')) detectedTool = 'javascript';
           else if (textToScan.includes('python')) detectedTool = 'python';
           else if (textToScan.includes('github') || textToScan.includes('git')) detectedTool = 'github';
+          else if (textToScan.includes('cursor')) detectedTool = 'cursor';
+          else if (textToScan.includes('v0')) detectedTool = 'v0';
+          else if (textToScan.includes('bolt')) detectedTool = 'bolt';
+          else if (textToScan.includes('ai tool') || textToScan.includes('new tech') || textToScan.includes('model') || textToScan.includes('gemini') || textToScan.includes('claude')) detectedTool = 'ai_tool';
         }
 
         if (detectedTool && TOOL_LOGOS[detectedTool]) {
