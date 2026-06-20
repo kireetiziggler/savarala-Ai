@@ -51,12 +51,12 @@ async function generateContentWithRetry(model, prompt, retries = 5, delay = 1000
                               message.includes('429');
 
       if (isQuotaExceeded && !fallbackAttempted) {
-        console.warn(`[Gemini Quota Warning] Quota/Rate limit exceeded. Falling back to gemini-1.5-flash...`);
+        console.warn(`[Gemini Quota Warning] Quota/Rate limit exceeded. Falling back to gemini-2.0-flash...`);
         try {
           const apiKey = process.env.GEMINI_API_KEY;
           const genAI = new GoogleGenerativeAI(apiKey);
           currentModel = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.0-flash',
             generationConfig: { responseMimeType: 'application/json' }
           });
           fallbackAttempted = true;
