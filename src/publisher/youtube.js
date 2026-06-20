@@ -19,10 +19,14 @@ function getOAuth2Client() {
   console.log(`[YouTube Auth Debug] Client Secret: length=${clientSecret.length}, starts with: "${clientSecret.substring(0, 3)}...", ends with: "...${clientSecret.substring(clientSecret.length - 3)}"`);
   console.log(`[YouTube Auth Debug] Refresh Token: length=${refreshToken.length}, starts with: "${refreshToken.substring(0, 5)}...", ends with: "...${refreshToken.substring(refreshToken.length - 5)}"`);
 
-  // Support configurable redirect URI, default to OAuth Playground since that is most common for Web clients
-  const redirectUri = process.env.YT_REDIRECT_URI || 'https://developers.google.com/oauthplayground';
-  console.log(`[YouTube Auth Debug] Redirect URI: "${redirectUri}"`);
-  const oauth2Client = new google.auth.OAuth2(clientId.trim(), clientSecret.trim(), redirectUri.trim());
+  // Only send redirect URI if explicitly configured (helps prevent mismatch on refresh)
+  const redirectUri = process.env.YT_REDIRECT_URI;
+  console.log(`[YouTube Auth Debug] Redirect URI: ${redirectUri ? `"${redirectUri}"` : "undefined"}`);
+  const oauth2Client = new google.auth.OAuth2(
+    clientId.trim(),
+    clientSecret.trim(),
+    redirectUri ? redirectUri.trim() : undefined
+  );
   oauth2Client.setCredentials({ refresh_token: refreshToken.trim() });
   return oauth2Client;
 }
