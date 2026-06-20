@@ -7,7 +7,20 @@ export async function generateThumbnail(thumbnailData, outputPath) {
 
   const launchOptions = {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-extensions',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-background-networking',
+      '--disable-default-apps',
+      '--mute-audio'
+    ]
   };
   if (process.env.PUPPETEER_EXECUTABLE_PATH) {
     launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;

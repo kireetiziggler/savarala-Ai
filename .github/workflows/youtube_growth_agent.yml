@@ -4,9 +4,9 @@ on:
   schedule:
     # 03:30 AM UTC = 09:00 AM IST (Short 1: Single-Scene Tech Meme)
     - cron: '30 3 * * *'
-    # 08:30 AM UTC = 02:00 PM IST (Short 2: 2-Scene Tech Meme)
+    # 08:30 AM UTC = 02:00 PM IST (Short 2: 2-Scene Expectation vs Reality Meme)
     - cron: '30 8 * * *'
-    # 02:30 PM UTC = 08:00 PM IST (Short 3: Coding Tutorial)
+    # 14:30 PM UTC = 08:00 PM IST (Short 3: Coding Tutorial with Voiceover)
     - cron: '30 14 * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
   repository_dispatch:
@@ -15,6 +15,7 @@ on:
 jobs:
   run-agent:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     permissions:
       contents: write # Required to push database.json changes back to the repo
@@ -29,10 +30,37 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Install System Dependencies for Chromium
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            libgbm1 \
+            libxkbcommon0 \
+            libxshmfence1 \
+            libgles2 \
+            libnss3 \
+            libnspr4 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libdbus-1-3 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxfixes3 \
+            libxrandr2 \
+            libpango-1.0-0 \
+            libcairo2 \
+            libasound2t64 \
+            fonts-noto-color-emoji \
+            fonts-liberation \
+            xvfb
+
       - name: Install Project Dependencies
-        env:
-          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
         run: npm ci
+
+      - name: Install Puppeteer Chrome Browser
+        run: npx puppeteer browsers install chrome
 
       - name: Execute Video Generation & Upload
         env:
@@ -44,37 +72,43 @@ jobs:
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           TTS_PROVIDER: edge
           VOICEOVER_LOCALE: en-US-AndrewNeural
-          YT_PRIVACY_STATUS: public # Set to 'private' if you want to inspect first
-          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+          YT_PRIVACY_STATUS: public
+          YT_CATEGORY_ID: '28'
+          DISPLAY: ':99'
         run: |
-          # Get current UTC hour
+          # Start virtual display for Puppeteer
+          Xvfb :99 -screen 0 1080x1920x24 &
+          sleep 2
+
+          # Get current UTC hour and strip leading zero
           HOUR=$(date -u +%H)
-          # Strip leading zero if present
           HOUR=$((10#$HOUR))
           echo "Current UTC Hour: $HOUR"
-          
-          # Decide workflow type based on hour
+
+          # Decide which Short type to generate based on the scheduled UTC hour
           if [ "$HOUR" -eq 3 ]; then
-            echo "Time matches 09:00 AM IST (03:30 UTC). Generating Single-Scene Tech Meme..."
+            echo "==> 09:00 AM IST slot: Generating Single-Scene Tech Meme..."
             node src/index.js run-workflow short single_scene_tech
           elif [ "$HOUR" -eq 8 ]; then
-            echo "Time matches 02:00 PM IST (08:30 UTC). Generating 2-Scene Tech Meme..."
+            echo "==> 02:00 PM IST slot: Generating 2-Scene Expectation vs Reality Meme..."
             node src/index.js run-workflow short meme_tech_2scene
           elif [ "$HOUR" -eq 14 ]; then
-            echo "Time matches 08:00 PM IST (14:30 UTC). Generating Coding Tutorial..."
+            echo "==> 08:00 PM IST slot: Generating Coding Tutorial with Voiceover..."
             node src/index.js run-workflow short tutorial
           else
-            echo "Manual or unexpected trigger. Defaulting to Single-Scene Tech Meme..."
+            echo "==> Manual / unexpected trigger (UTC hour $HOUR). Generating Single-Scene Tech Meme..."
             node src/index.js run-workflow short single_scene_tech
           fi
 
       - name: Commit and Persist Database State
+        if: always()
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "github-actions[bot]"
-          
+
           # Stage the local database file tracking topic history
           git add database.json
-          
-          # Check if database has changed, and commit/push if so
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: auto-update topic history [skip ci]" && git push)
+
+          # Only commit and push if database.json actually changed
+          git diff --quiet && git diff --staged --quiet || \
+            (git commit -m "chore: auto-update topic history [skip ci]" && git push)
