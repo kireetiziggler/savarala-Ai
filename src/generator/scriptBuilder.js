@@ -103,7 +103,7 @@ CRITICAL FORMAT CONSTRAINT (Single-Scene Meme):
 - visualParams must contain:
   * "setup": "Setup/Context text (e.g. WHEN JAVASCRIPT SEES AN ARRAY COMPARISON)"
   * "punchline": "The funny punchline or fact (e.g. [] == ![] IS ACTUALLY TRUE 🤡)"
-  * "keyword": "A highly detailed, specific image generation prompt (without any placeholder text/names) that perfectly matches the expectation scene. If a specific tool/editor is mentioned, describe a funny cartoon, 3D render, or robotic representation of that tool (e.g., 'a funny cartoon programmer staring at a glowing yellow computer screen showing code, holding his head, digital art, vibrant colors, tech humor')"
+  * "keyword": "A highly detailed, specific image generation prompt (without any placeholder text/names) that describes a realistic, high-quality photograph or real-life scene (e.g., 'a professional software developer sitting at a modern desk staring at a dual-monitor screen showing code, holding his head in frustration, natural lighting, sharp focus, real human, DSLR photography, 8k resolution, tech humor')"
 - IMPORTANT SYNC RULE: The image generation prompt ("keyword") must NOT contain any raw text overlays or labels inside the image. It must focus entirely on drawing a clear, funny, high-impact physical scene or metaphor that conveys the exact situation described in the setup and punchline text cards.
 `;
 
@@ -145,11 +145,11 @@ CRITICAL FORMAT CONSTRAINT (2-Scene Meme):
 - For Scene 1, visualParams must contain:
   * "setup": "Expectation Setup text (e.g. EXPECTATION: DEPLOYING TO PRODUCTION ON A FRIDAY)"
   * "punchline": "Expectation Hope text (e.g. WALKING OUT OF THE OFFICE LIKE A BOSS)"
-  * "keyword": "A highly detailed, specific image generation prompt (without any placeholder text/names) that perfectly matches the expectation scene (e.g. A cool cartoon developer wearing sunglasses walking away from an office building, digital art, vibrant colors)"
+  * "keyword": "A highly detailed, specific image generation prompt (without any placeholder text/names) that describes a realistic, high-quality photograph or real-life representation of the scene (e.g., 'a cool software developer wearing sunglasses confidently walking away from a modern glass office building, sunny day, natural lighting, DSLR photo, sharp focus')"
 - For Scene 2, visualParams must contain:
   * "setup": "Reality Setup text (e.g. REALITY: SERVER CRASHED AT 5:01 PM)"
   * "punchline": "Final punchline text (e.g. THE CLIENT HAS CALLED MY PHONE 14 TIMES ALREADY)"
-  * "keyword": "A highly detailed, specific image generation prompt that perfectly matches the reality punchline (e.g. A computer server tower on fire in a dark server room, with cartoon smoke, flames, and emergency red lights flashing, digital art)"
+  * "keyword": "A highly detailed, specific image generation prompt that describes a realistic, high-quality photograph or real-life representation of the reality punchline (e.g., 'a computer server tower in a dark server room with realistic smoke rising from it, emergency blinking red warning lights, realistic details, DSLR photo')"
 - IMPORTANT SYNC RULE: The image generation prompt ("keyword") must NOT contain any raw text overlays or labels inside the image. It must focus entirely on drawing a clear, funny, high-impact physical scene or metaphor that conveys the exact situation described in the setup and punchline text cards.
 `;
 

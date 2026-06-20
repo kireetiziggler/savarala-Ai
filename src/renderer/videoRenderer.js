@@ -74,7 +74,7 @@ async function generateAIImage(prompt, videoType = 'long', aspect = 'auto') {
       height = 1080;
     }
     const seed = Math.floor(Math.random() * 1000000);
-    const cleanPrompt = encodeURIComponent(`${prompt}, professional high-quality 4k 3d digital art, modern software developer tech style, clean design, vibrant color scheme`);
+    const cleanPrompt = encodeURIComponent(`${prompt}, realistic photo, high quality, professional photography, natural lighting, sharp focus, real human developer, tech office environment, DSLR`);
     const url = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&nologo=true&private=true&seed=${seed}`;
     
     console.log(`[AI Image Generator] Requesting Pollinations.ai for: "${prompt}" (${width}x${height})...`);
@@ -520,7 +520,7 @@ export async function renderVideo(scriptPackage, videoType, outputFilePath) {
       
       console.log('[Video Renderer] Mixing background music into silent video...');
       const musicPath = await ensureBackgroundMusic(scriptPackage.title);
-      const mixCmd = `"${ffmpegPath}" -y -i "${silentConcatPath}" -i "${musicPath}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "${outputFilePath}"`;
+      const mixCmd = `"${ffmpegPath}" -y -i "${silentConcatPath}" -ss 20 -i "${musicPath}" -c:v copy -c:a aac -map 0:v:0 -map 1:a:0 -shortest "${outputFilePath}"`;
       await new Promise((resolve, reject) => {
         exec(mixCmd, (mixErr, stdout, stderr) => {
           if (mixErr) {
