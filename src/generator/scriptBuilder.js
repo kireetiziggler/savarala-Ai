@@ -16,13 +16,41 @@ function getGeminiModel() {
   });
 }
 
-// Helper to retry Gemini calls on 429 Rate Limits and 5xx Server Errors
+// Helper to retry Gemini calls on 429 Rate Limits and 5xx Server Errors with automatic 1.5-flash fallback
 async function generateContentWithRetry(model, prompt, retries = 5, delay = 10000) {
+  let currentModel = model;
+  let fallbackAttempted = false;
+  
   for (let i = 0; i < retries; i++) {
     try {
-      return await model.generateContent(prompt);
+      return await currentModel.generateContent(prompt);
     } catch (error) {
       const status = error.status;
+      const message = error.message || '';
+      
+      const isQuotaExceeded = status === 429 || 
+                              message.includes('Quota exceeded') || 
+                              message.includes('quota') || 
+                              message.includes('Too Many Requests') ||
+                              message.includes('429');
+                              
+      if (isQuotaExceeded && !fallbackAttempted) {
+        console.warn(`[Gemini Quota Warning] Quota/Rate limit exceeded. Falling back to gemini-1.5-flash...`);
+        try {
+          const apiKey = process.env.GEMINI_API_KEY;
+          const genAI = new GoogleGenerativeAI(apiKey);
+          currentModel = genAI.getGenerativeModel({
+            model: 'gemini-1.5-flash',
+            generationConfig: { responseMimeType: 'application/json' }
+          });
+          fallbackAttempted = true;
+          i--; // Don't consume a retry attempt for switching models
+          continue;
+        } catch (fbErr) {
+          console.error('[Gemini Fallback Error] Failed to initialize fallback model:', fbErr.message);
+        }
+      }
+
       const isRetryable = status === 429 || status === 500 || status === 503 || status === 504 ||
                           (error.message && (
                             error.message.includes('429') ||
