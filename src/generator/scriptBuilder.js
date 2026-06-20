@@ -80,7 +80,7 @@ CRITICAL FORMAT CONSTRAINT (Single-Scene Meme):
 `;
 
     responseSchema = `{
-  "title": "SEO optimized title (under 70 chars, primary keyword near front, CTR-phrased, e.g. Why JavaScript Array Comparison is Wild! 🤡)",
+  "title": "SEO optimized title (under 50 chars, primary keyword near front, CTR-phrased, e.g. JavaScript Coercion is Wild! 🤡)",
   "description": "Compelling video description, first 2 lines must hook the viewer. Include viral tags and tech hashtags.",
   "tags": ["tag1", "tag2"], // 20-30 tags, must include viral tech/meme tags
   "hashtags": ["hashtag1", "hashtag2"], // 15-20 hashtags, MUST include: #Shorts, #TechMemes, #CodingHumor, #DeveloperLife, #WebDev, #SoftwareEngineering, #OfficeHumor, #ProgrammerLife, #CodingMemes
@@ -126,7 +126,7 @@ CRITICAL FORMAT CONSTRAINT (2-Scene Meme):
 `;
 
     responseSchema = `{
-  "title": "SEO optimized title (under 70 chars, primary keyword near front, CTR-phrased, e.g. When Friday Deployments Go Wrong! 😭)",
+  "title": "SEO optimized title (under 50 chars, primary keyword near front, CTR-phrased, e.g. Friday Deployments Go Wrong! 😭)",
   "description": "Compelling video description, first 2 lines must hook the viewer. Include viral tags and tech hashtags.",
   "tags": ["tag1", "tag2"], // 20-30 tags, must include viral tech/meme tags
   "hashtags": ["hashtag1", "hashtag2"], // 15-20 hashtags, MUST include: #Shorts, #TechMemes, #CodingHumor, #DeveloperLife, #WebDev, #SoftwareEngineering, #OfficeHumor, #ProgrammerLife, #CodingMemes
@@ -181,7 +181,7 @@ CRITICAL FORMAT CONSTRAINT (Coding Tutorial):
 `;
 
     responseSchema = `{
-  "title": "SEO optimized title (under 70 chars, primary keyword near front, CTR-phrased, e.g. Fix React Infinite Loop inside useEffect! 🤯)",
+  "title": "SEO optimized title (under 50 chars, primary keyword near front, CTR-phrased, e.g. Fix React useEffect Loop! 🤯)",
   "description": "Compelling video description, first 2 lines must hook the viewer. Include viral tags and tech hashtags.",
   "tags": ["tag1", "tag2"], // 20-30 tags, must include viral coding tags
   "hashtags": ["hashtag1", "hashtag2"], // 15-20 hashtags, MUST include: #Shorts, #CodingTutorial, #ReactJS, #NextJS, #WebDevelopment, #LearnCoding, #ProgrammingTutorial
