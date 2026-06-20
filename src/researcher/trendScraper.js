@@ -2,41 +2,30 @@ import axios from 'axios';
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-// Scrape Reddit communities using public JSON feeds (no API keys needed)
+// Fetch developer community trends from Dev.to API (open access, never blocks datacenter/CI IPs)
 async function fetchRedditTrends() {
-  const subreddits = ['webdev', 'reactjs', 'nextjs', 'LocalLLaMA', 'artificial', 'softwaretesting'];
   const trends = [];
+  try {
+    const url = 'https://dev.to/api/articles?top=3&per_page=40';
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': USER_AGENT,
+        'Accept': 'application/json'
+      }
+    });
 
-  for (const sub of subreddits) {
-    try {
-      const url = `https://www.reddit.com/r/${sub}/hot.json?limit=10`;
-      const response = await axios.get(url, {
-        headers: {
-          'User-Agent': USER_AGENT,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Cache-Control': 'max-age=0'
-        }
+    const articles = response.data || [];
+    articles.forEach(article => {
+      trends.push({
+        source: `dev.to/t/${article.tag_list?.join(',') || 'tech'}`,
+        title: article.title,
+        score: article.public_reactions_count || 0,
+        comments: article.comments_count || 0,
+        url: article.url
       });
-      
-      const posts = response.data?.data?.children || [];
-      posts.forEach(post => {
-        const data = post.data;
-        if (data && !data.stickied) {
-          trends.push({
-            source: `reddit/r/${sub}`,
-            title: data.title,
-            score: data.score,
-            comments: data.num_comments,
-            url: `https://reddit.com${data.permalink}`
-          });
-        }
-      });
-    } catch (error) {
-      console.warn(`[Scraper Warning] Reddit r/${sub} blocked or rate-limited (Status ${error.response?.status || 'network error'}). The topic selector will fallback safely.`);
-    }
+    });
+  } catch (error) {
+    console.warn(`[Scraper Warning] Dev.to API trends failed (Status ${error.response?.status || 'network error'}). The topic selector will fallback safely.`);
   }
   return trends;
 }
