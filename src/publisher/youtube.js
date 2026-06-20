@@ -14,8 +14,9 @@ function getOAuth2Client() {
     throw new Error('Missing YouTube API credentials in .env (YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN).');
   }
 
-  // Redirect URI is not strictly needed for refreshing tokens, but we construct it properly
-  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, 'urn:ietf:wg:oauth:2.0:oob');
+  // Support configurable redirect URI, default to OAuth Playground since that is most common for Web clients
+  const redirectUri = process.env.YT_REDIRECT_URI || 'https://developers.google.com/oauthplayground';
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
   oauth2Client.setCredentials({ refresh_token: refreshToken });
   return oauth2Client;
 }
