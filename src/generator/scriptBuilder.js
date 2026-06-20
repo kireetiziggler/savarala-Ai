@@ -60,6 +60,7 @@ export async function generateScriptAndMetadata(topicInfo) {
     console.log('[TEST] Returning mock script for Cursor AI...');
     return MOCK_UNIQUE_SCRIPT;
   }
+  const model = getGeminiModel();
   let formatConstraints = '';
   let responseSchema = '';
   
