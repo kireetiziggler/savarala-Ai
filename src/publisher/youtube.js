@@ -65,7 +65,7 @@ async function attemptUpload(youtube, videoMetadata, videoPath, thumbnailPath) {
 
   const requestBody = {
     snippet: {
-      title: videoMetadata.title,
+      title: videoMetadata.title ? videoMetadata.title.substring(0, 100) : '',
       description: fullDescription,
       tags: safeTags,
       categoryId: categoryId

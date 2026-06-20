@@ -99,8 +99,8 @@ export async function runQualityControl(videoData, videoPath, thumbnailPath) {
   // 2. Metadata length checks
   if (!videoData.title || videoData.title.length === 0) {
     errors.push('Video title is missing.');
-  } else if (videoData.title.length > 70) {
-    errors.push(`Video title is too long (${videoData.title.length} characters). YouTube recommends under 70.`);
+  } else if (videoData.title.length > 100) {
+    errors.push(`Video title is too long (${videoData.title.length} characters). YouTube limit is 100.`);
   }
 
   if (!videoData.description || videoData.description.length === 0) {
