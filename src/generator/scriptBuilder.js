@@ -100,6 +100,7 @@ CRITICAL FORMAT CONSTRAINT (Single-Scene Meme):
 - Scene 1 duration must be strictly 12 seconds.
 - You MUST set "voiceoverDisabled": true at the root of the JSON. There will be no spoken voiceover and no subtitle captions.
 - The visualType MUST be 'comic'.
+- The zoomState MUST be selected from: 'zoom_in_center', 'zoom_in_left', 'zoom_in_right', 'pan_left', 'pan_right'. Select one that best fits the emotion or action of the scene to create visual movement and hook the viewer immediately.
 - visualParams must contain:
   * "setup": "Setup/Context text (e.g. WHEN JAVASCRIPT SEES AN ARRAY COMPARISON)"
   * "punchline": "The funny punchline or fact (e.g. [] == ![] IS ACTUALLY TRUE 🤡)"
@@ -142,6 +143,7 @@ CRITICAL FORMAT CONSTRAINT (2-Scene Meme):
 - Scene 2 (Reality/Punchline) duration must be strictly 10 seconds.
 - You MUST set "voiceoverDisabled": true at the root of the JSON. There will be no spoken voiceover and no subtitle captions.
 - For both scenes, the visualType MUST be 'comic'.
+- For each scene, select a dynamic zoomState from: 'zoom_in_center', 'zoom_in_left', 'zoom_in_right', 'pan_left', 'pan_right' to create pattern interrupts and reset viewer attention. Avoid using 'normal' for all scenes.
 - For Scene 1, visualParams must contain:
   * "setup": "Expectation Setup text (e.g. EXPECTATION: DEPLOYING TO PRODUCTION ON A FRIDAY)"
   * "punchline": "Expectation Hope text (e.g. WALKING OUT OF THE OFFICE LIKE A BOSS)"
@@ -198,6 +200,7 @@ CRITICAL FORMAT CONSTRAINT (Coding Tutorial):
 - You MUST write a storyboard with 3 to 5 scenes.
 - Total video duration should sum to ~45-55 seconds.
 - You MUST set "voiceoverDisabled": false at the root of the JSON. There WILL be spoken voiceover and subtitle captions.
+- For each scene, select a dynamic zoomState from: 'zoom_in_center', 'zoom_in_left', 'zoom_in_right', 'pan_left', 'pan_right' to create pattern interrupts and reset viewer attention.
 - For each scene, you can choose visualType: 'slide' or 'code'.
 - For 'slide' visualType, visualParams must contain:
   * "title": "Slide Title"
