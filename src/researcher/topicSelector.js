@@ -206,11 +206,11 @@ You MUST respond in JSON format. Use the following schema:
 
     // If all options duplicate, fallback to the priority list based on history
     console.log('All scraper-based topics duplicate. falling back to category priority list...');
-    return getFallbackCategoryTopic(videoType, subType);
+    return getFallbackCategoryTopic(videoType, subType, trendData);
 
   } catch (error) {
     console.error('Failed to select topic using Gemini. Falling back to category priority list.', error);
-    return getFallbackCategoryTopic(videoType, subType);
+    return getFallbackCategoryTopic(videoType, subType, trendData);
   }
 }
 
@@ -283,8 +283,37 @@ const TOOL_FALLBACKS = [
   }
 ];
 
-// Fallback logic to iterate priority categories when scraper/LLM fails or duplicates everything
-function getFallbackCategoryTopic(videoType, subType = '') {
+// Fallback logic to iterate priority categories or dynamically extract trending items when scraper/LLM fails or duplicates everything
+function getFallbackCategoryTopic(videoType, subType = '', trendData = null) {
+  // 1. Dynamic Trend Fallback: Try to use a real-time scraped trend from Dev.to or Hacker News
+  if (trendData) {
+    const scrapedTrends = [];
+    if (trendData.reddit && trendData.reddit.length > 0) {
+      scrapedTrends.push(...trendData.reddit.map(t => ({ ...t, sourceName: 'Dev.to' })));
+    }
+    if (trendData.news && trendData.news.length > 0) {
+      scrapedTrends.push(...trendData.news.map(t => ({ ...t, sourceName: 'Hacker News', score: t.score || 0 })));
+    }
+
+    if (scrapedTrends.length > 0) {
+      // Sort by score or reactions descending to find the hottest topic
+      scrapedTrends.sort((a, b) => b.score - a.score);
+      
+      for (const trend of scrapedTrends) {
+        if (!db.hasTopicInLast7Days(trend.title)) {
+          console.log(`[Topic Selector Fallback] Found trending ${trend.sourceName} article to use dynamically: "${trend.title}"`);
+          return {
+            topic: trend.title,
+            category: 'Niche Trend',
+            type: videoType,
+            suggestedTitle: trend.title.substring(0, 50),
+            rationale: `Dynamic real-time fallback from trending ${trend.sourceName} post`
+          };
+        }
+      }
+    }
+  }
+
   if (subType === 'tutorial') {
     console.log('[Topic Selector] Applying tutorial fallback topic list...');
     for (const fallback of TUTORIAL_FALLBACKS) {
