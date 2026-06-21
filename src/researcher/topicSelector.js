@@ -159,6 +159,7 @@ INSTRUCTIONS:
 9. Keep the target audience in mind: Software Developers, QA Engineers, and Automation Specialists.
 10. Recommend THREE (3) ranked topic options in order of strength so we can avoid duplication.
 11. Each option must be a concrete, specific concept, NOT a broad category. (For example, instead of just "Playwright", propose "How to resolve flaky tests using Playwright's auto-wait and tracing configurations").
+12. CRITICAL VIRAL RULE: Choose topics that are highly relatable, frustrating, funny, or slightly controversial (e.g., framework debates, common coding bugs, tabs vs spaces, code review friction). The content must provoke viewers to comment, as comments are the primary driver of the YouTube Shorts algorithm pushing videos to millions of feeds.
 
 ${subTypeInstructions}
 
@@ -170,7 +171,7 @@ You MUST respond in JSON format. Use the following schema:
       "topic": "The exact topic name",
       "category": "Matching category name from the priority list, or 'Niche Trend'",
       "rationale": "Why this topic is highly relevant right now based on scraping data",
-      "suggestedTitle": "An attention-grabbing click-through-rate friendly title under 70 chars"
+      "suggestedTitle": "An attention-grabbing click-through-rate friendly title under 50 characters (e.g. JS is Wild! 🤡)"
     },
     ...
   ]
