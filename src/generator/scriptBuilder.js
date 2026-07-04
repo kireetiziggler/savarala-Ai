@@ -253,6 +253,10 @@ CRITICAL FORMAT CONSTRAINT (Coding Tutorial):
   const prompt = `
 You are an expert tech content production team (Strategist, Writer, SEO Expert). You need to write a highly viral, funny, and SEO-optimized daily tech video script and storyboard package.
 
+ADVERTISER-FRIENDLY & SAFETY CONSTRAINTS:
+- Do NOT use any profanity, vulgarity, or inappropriate language.
+- CRITICAL: Do NOT use internet slang/abbreviations representing profanity or vulgar expressions, including but not limited to "WTF", "LMAO", "STFU", etc. in the script, title, description, tags, or hashtags. Keep all content advertiser-friendly and eligible for monetization.
+
 VIRAL SHORTS BEST PRACTICES (To get millions of views):
 1. THE 2-SECOND HOOK: Start the very first sentence of the narration (or the setup card text) with instant tension, surprise, or curiosity (e.g., "This one line of CSS changes everything...", "Stop using React useEffect like this...", "Why Senior devs hate Friday deploys..."). Never use generic greetings like "Welcome back" or "Hey guys".
 2. THE INFINITE LOOP: Write the script's narration so that the final 3-4 words of the video lead seamlessly back into the first 3-4 words of the video's hook. This creates an infinite, seamless loop when played on YouTube, driving viewer retention past 100%.

@@ -160,6 +160,7 @@ INSTRUCTIONS:
 10. Recommend THREE (3) ranked topic options in order of strength so we can avoid duplication.
 11. Each option must be a concrete, specific concept, NOT a broad category. (For example, instead of just "Playwright", propose "How to resolve flaky tests using Playwright's auto-wait and tracing configurations").
 12. CRITICAL VIRAL RULE: Choose topics that are highly relatable, frustrating, funny, or slightly controversial (e.g., framework debates, common coding bugs, tabs vs spaces, code review friction). The content must provoke viewers to comment, as comments are the primary driver of the YouTube Shorts algorithm pushing videos to millions of feeds.
+13. SAFETY RULE: Do NOT select topics, categories, or suggest titles that contain profanity, vulgarity, or internet slang abbreviations representing profanity (such as "WTF", "LMAO", "STFU", etc.). Everything must be advertiser-friendly and compliant with monetization guidelines.
 
 ${subTypeInstructions}
 
